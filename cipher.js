@@ -1,137 +1,85 @@
 const sodium = require('sodium-native')
-const hkdf = require('./hkdf')
-const ecdh = require('./dh')
 
-class CipherState {
-  constructor () {
-    this.digest = Buffer.alloc(32)
-    
-    this.chainingKey = null
-    this.tempKey = null
-    this.ctr = 0
+module.exports = class CipherState {
+  constructor (key) {
+    this.key = key || null
+    this.nonce = 0
   }
 
-  mixHash (data) {
-    accumulateDigest(this.digest, data)
+  initialiseKey (key) {
+    this.key = key
+    this.nonce = 0
   }
 
-  mixKey (pubkey, seckey) {
-    const dh = curve.ecdh(pubkey, seckey)
-    const hkdfResult = hkdf(this.chainingKey, dh)
-    this.chainingKey = hkdfResult[0]
-    this.tempKey = hkdfResult[1]
+  setNonce (nonce) {
+    this.nonce = nonce
   }
 
-  encryptAndHash (plaintext) {
-    const ciphertext = this.encryptWithAD(this.tempKey, this.ctr++, this.digest, plaintext)
-    accumulateDigest(this.digest, ciphertext)
+  encrypt (plaintext, ad) {
+    if (!this.hasKey) return plaintext
+    if (!ad) ad = Buffer.alloc(0)
+
+    const ciphertext = encryptWithAD(this.key, this.nonce, ad, plaintext)
+    this.nonce++
+
     return ciphertext
   }
 
-  decryptAndHash (ciphertext) {
-    const plaintext = decryptWithAD(this.tempKey, this.ctr++, this.digest, ciphertext)
-    accumulateDigest(this.digest, ciphertext)
-    return plaintext
-  }
-
-  encryptWithAD (plaintext) {
-    if (!this.hasKey) return plaintext
-    return this.encryptWithAD(this.tempKey, this.ctr++, this.digest, plaintext)
-  }
-
-  decryptWithAD (ciphertext) {
+  decrypt (ciphertext, ad) {
     if (!this.hasKey) return ciphertext
-    return this.encryptWithAD(this.tempKey, this.ctr++, this.digest, ciphertext)
+    if (!ad) ad = Buffer.alloc(0)
+
+    const plaintext = decryptWithAD(this.key, this.nonce, ad, ciphertext)
+    this.nonce++
+
+    return plaintext
   }
 
   get hasKey () {
     return this.key !== null
   }
 
-  finalKey (key) {
-    const self = this
+  static get alg () {
+    return 'ChaChaPoly'
+  }
 
-    const obj = {
-      key,
-      nonce: 0
-    }
+  static get MACBYTES () {
+    return 16
+  }
 
-    obj.increment = function () {
-      this.nonce++
+  static get NONCEBYTES () {
+    return 8
+  }
 
-      if (this.nonce >= 1000) {
-        const res = hkdf(self.chainingKey, this.key)
-        self.chainingKey = res[0]
-        this.key = res[1]
-        this.nonce = 0
-      }
-    }
-
-    return obj
+  static get KEYBYTES () {
+    return 32
   }
 }
 
-function accumulateDigest (digest, input) {
-  const toHash = Buffer.concat([digest, input])
-  sodium.crypto_generichash(digest, toHash)
-}
-
 function encryptWithAD (key, counter, additionalData, plaintext) {
-  // for our purposes, additionalData will always be a pubkey so we encode from hex 
+  // for our purposes, additionalData will always be a pubkey so we encode from hex
   if (!additionalData instanceof Uint8Array) additionalData = Buffer.from(additionalData, 'hex')
   if (!plaintext instanceof Uint8Array) plaintext = Buffer.from(plaintext, 'hex')
 
-  const counterBuf = Buffer.alloc(12)
-  writeInt64LE(counter, counterBuf, 4)
+  const nonce = Buffer.alloc(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
+  nonce.writeUInt32LE(counter, 4)
 
-  const cipher = crypto.createCipheriv('chacha20-poly1305', key, counterBuf, {
-    authTagLength: 16
-  })
+  const ciphertext = Buffer.alloc(plaintext.byteLength + sodium.crypto_aead_chacha20poly1305_ietf_ABYTES)
 
-  cipher.setAAD(additionalData, { plaintextLength: plaintext.length })
-
-  const head = cipher.update(plaintext)
-  const final = cipher.final()
-  const encrypted = Buffer.concat([head, final])
-  const tag = cipher.getAuthTag('hex')
-
-  const result = Buffer.concat([encrypted, tag])
-
-  return result
+  sodium.crypto_aead_chacha20poly1305_ietf_encrypt(ciphertext, plaintext, additionalData, null, nonce, key)
+  return ciphertext
 }
 
-function decryptWithAD (key, counter, additionalData, data) {
-  // for our purposes, additionalData will always be a pubkey so we encode from hex 
+function decryptWithAD (key, counter, additionalData, ciphertext) {
+  // for our purposes, additionalData will always be a pubkey so we encode from hex
   if (!additionalData instanceof Uint8Array) additionalData = Buffer.from(additionalData, 'hex')
-  if (!data instanceof Uint8Array) data = Buffer.from(data, 'hex')
+  if (!ciphertext instanceof Uint8Array) ciphertext = Buffer.from(ciphertext, 'hex')
 
-  const ciphertext = data.slice(0, data.byteLength - 16)
-  const receivedTag = data.slice(data.byteLength - 16)
+  const nonce = Buffer.alloc(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
+  nonce.writeUInt32LE(counter, 4)
 
-  const decrypted = encryptWithAD(key, counter, additionalData, ciphertext)
-  const plaintext = decrypted.slice(0, decrypted.byteLength - 16)
+  const plaintext = Buffer.alloc(ciphertext.byteLength - sodium.crypto_aead_chacha20poly1305_ietf_ABYTES)
 
-  const checkTag = encryptWithAD(key, counter, additionalData, plaintext)
-  const tag = checkTag.slice(checkTag.byteLength - 16)
-
-  // if (Buffer.compare(receivedTag, tag) !== 0) throw new Error('MAC could not be verified')
-
+  sodium.crypto_aead_chacha20poly1305_ietf_decrypt(plaintext, null, ciphertext, additionalData, nonce, key)
   return plaintext
-}
-
-function writeInt32as64LE (value, buf, offset) {
-  if (!buf) buf = Buffer.alloc(8)
-  if (!offset) offset = 0
-  assert(value < 0x100000000)
-
-  buf[offset++] = lo
-  lo >>= 8
-  buf[offset++] = lo
-  lo >>= 8
-  buf[offset++] = lo
-  lo >>= 8
-  buf[offset++] = lo
-  lo >>= 8
-
-  return buf
 }

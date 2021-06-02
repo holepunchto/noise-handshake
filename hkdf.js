@@ -1,24 +1,26 @@
-const crypto = require('crypto')
+const assert = require('nanoassert')
+const sodium = require('sodium-native')
 
+const HASHLEN = 32
 module.exports = function hkdf (salt, inputKeyMaterial, info = '', length = 64) {
   const pseudoRandomKey = hkdfExtract(salt, inputKeyMaterial)
   const result = hkdfExpand(pseudoRandomKey, info, length)
 
-  const [ k1, k2 ] = [ result.slice(0, 32), result.slice(32)]
-  
-  return [ k1, k2 ]
-  
+  const [k1, k2] = [result.slice(0, 32), result.slice(32)]
+
+  return [k1, k2]
+
   function hkdfExtract (salt, inputKeyMaterial) {
     return hmacDigest(salt, inputKeyMaterial)
   }
 
-  function hkdfExpand(key, info = '', length = 64) {
+  function hkdfExpand (key, info = '', length = 64) {
     const T = [Buffer.from('')]
-    const lengthRatio = length / SHA256_BYTES
+    const lengthRatio = length / HASHLEN
 
     for (let i = 0; i < lengthRatio; i++) {
       const toHash = new Uint8Array(T[i].byteLength + info.length + 1)
-      
+
       toHash.set(T[i])
       let offset = T[i].byteLength
 
@@ -41,8 +43,8 @@ module.exports = function hkdf (salt, inputKeyMaterial, info = '', length = 64) 
 }
 
 function hmacDigest (key, input) {
-  const hmac = crypto.createHmac('sha256', key)
-  hmac.update(input)
+  const hmac = Buffer.alloc(sodium.crypto_generichash_BYTES)
+  sodium.crypto_generichash(hmac, input, key)
 
-  return hmac.digest()
+  return hmac
 }

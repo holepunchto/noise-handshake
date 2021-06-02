@@ -10,7 +10,7 @@ const SKLEN = crypto_scalarmult_SCALARBYTES
 const SEEDLEN = crypto_kx_SEEDBYTES
 const ALG = '25519'
 
-module.exports = () => ({
+module.exports = {
   DHLEN,
   PKLEN,
   SKLEN,
@@ -19,7 +19,7 @@ module.exports = () => ({
   generateKeypair,
   generateSeedKeypair,
   dh
-})
+}
 
 function generateKeypair (pk, sk) {
   assert(pk.byteLength === PKLEN)

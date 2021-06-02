@@ -1,192 +1,99 @@
-const { generateKeyPair, DHLEN, PKLEN, SKLEN } = require('./dh.js')
+const { Writer, Reader } = require('wire-encoder')
 const assert = require('nanoassert')
 
-const ZERO = Buffer.alloc(0)
-const PROTOCOL_TAG = Buffer.from('Noise_XX_25519_ChaChaPoly_SHA256', 'utf8')
-const PROLOGUE = Buffer.from('dht', 'utf8')
+const { generateKeypair, DHLEN, PKLEN, SKLEN, ALG } = require('./dh.js')
+const SymmetricState = require('./state')
 
-const patterns = 
-
-module.exports.Initiator = class Initiator extends CipherState {
-  constructor (staticKey, ephemeralKey) {
-    this.static = staticKey ? generateKey(staticKey) : generateKey()
-    this.ephemeral = null
-
-    this.receiverEphemeral = null
-
-    this.sender = null
-    this.receiver = null
-
-    this.roundTrips = 0
-    this.isInitiator = true
-  }
-
-  // -> e
-  initialise () {
-    this.ephemeral = generateKey()
-
-    this.mixHash(PROTOCOL_TAG)
-    this.chainingKey = this.digest.slice()
-
-    this.mixHash(PROLOGUE)
-  }
-
-  send (payload) {
-    switch (this.roundTrips) {
-      case 0: 
-        this.mixHash(this.ephemeral.pub)
-        return this.ephemeral.pub
-
-      case 1:
-        return this.respond(payload)
-
-      default:
-        throw new Error('Unexpected handshake state')
-    }
-  }
-
-  recv (buf) {
-    switch (this.roundTrips) {
-      case 0:
-        this.roundTrips++    
-        return this.receive(buf)
-
-      default:
-        throw new Error('Unexpected handshake state')
-    }
-  }
-
-  // <- e, ee, s, es
-  receive (buf) {
-    const message = new Reader(buf)
-
-    const re = message.read(DHLEN)
-    this.mixHash(re)
-
-    const rs = this.decryptAndHash(message.read(DHLEN + 16))
-
-    const ciphertext = message.read()
-
-    this.mixKey(re, this.ephemeral.priv)
-    this.mixKey(rs, this.ephemeral.priv)
-
-    return this.decryptAndHash(ciphertext)
-  }
-
-  // -> s, se
-  respond (payload) {
-    if (!payload) payload = ZERO
-    const message = new Writer()
-
-    message.write(this.encryptAndHash(this.static.pub))
-    this.mixKey(re, this.static.priv)
-
-    message.write(this.encryptAndHash(payload))
-
-    return message.final()
+const HANDSHAKES = {
+  XX: {
+    messages: ['e', 'e,ee,s,es', 's,se']
+  },
+  IK: {
+    responderPreshare: true,
+    messages: ['e,es,s,ss', 'e,ee,se']
   }
 }
 
-module.exports.Responder = class Responder extends CipherState {
-  constructor (staticKeyPair) {
-    this.static = staticKeyPair || generateKey()
+module.exports = class NoiseState extends SymmetricState {
+  constructor (pattern, initiator, staticKey) {
+    super()
+
+    this.static = staticKey ? generateKey(staticKey) : generateKey()
     this.ephemeral = null
 
-    this.initiatorEphemeral = null
+    this.re = null
+    this.rs = null
 
-    this.sender = null
-    this.receiver = null
+    this.pattern = pattern
+    this.handshake = HANDSHAKES[this.pattern]
+    this.messages = this.handshake.messages
 
-    this.roundTrips = 0
-    this.isInitiator = true
+    this.protocol = Buffer.from(['Noise', this.pattern, ALG, this.constructor.alg].join('_'))
+
+    this.initiator = initiator
+    this.handshakeStep = 0
+    this.handshakeComplete = false
+
+    this.rx = null
+    this.tx = null
   }
 
-  initialise () {
-    initialiseSymmetric(this.digest, PROTOCOL_TAG)
+  initialise (prologue, remoteStatic) {
+    this.mixHash(this.protocol)
     this.chainingKey = this.digest.slice()
 
-    this.mixHash(PROLOGUE)
+    this.mixHash(prologue)
+
+    if (this.handshake.responderPreshare) {
+      if (this.initiator) this.rs = remoteStatic
+
+      const key = this.initiator ? this.rs : this.static.pub
+      assert(key != null, 'Remote pubkey required')
+
+      this.mixHash(this.initiator ? this.rs : this.static.pub)
+    }
+
+    if (this.handshake.initiatorPreshare) {
+      if (!this.initiator) this.rs = remoteStatic
+
+      const key = this.initiator ? this.static.pub : this.rs
+      assert(key != null, 'Remote pubkey required')
+
+      this.mixHash(this.initiator ? this.static.pub : this.rs)
+    }
   }
 
-  send (payload) {
-    switch (this.roundTrips){
-      case 0:
-        this.roundTrips++
-        return this.respond(payload)
-   
-      default:
-        throw new Error('Unexpected handshake state')
-    }
+  send (payload = Buffer.alloc(0)) {
+    assert(!(this.handshakeStep % 2) === this.initiator, 'Unexpected handshake state')
+
+    const pattern = this.messages[this.handshakeStep++]
+    return this.sendMessage(payload, pattern)
   }
 
   recv (buf) {
-    switch (this.roundTrips){
-      case 0:
-        return this.respond(payload)
-   
-      default:
-        throw new Error('Unexpected handshake state')
-    }
+    assert(!!(this.handshakeStep % 2) === this.initiator, 'Unexpected handshake state')
+
+    const pattern = this.messages[this.handshakeStep++]
+    return this.readMessage(buf, pattern)
   }
 
-  // <- e
-  receive (buf) {
-    const message = new Reader(buf)
+  final () {
+    const { cipher1, cipher2 } = this.split()
 
-    this.re = buf.read(DHLEN)
-    this.mixHash(re)
+    this.tx = this.initiator ? cipher1 : cipher2
+    this.rx = this.initiator ? cipher2 : cipher1
 
-    const ciphertext = buf.read()
-
-    return this.decryptAndHash(ciphertext)
+    this.handshakeComplete = true
   }
 
-  // -> e, ee, s, es
-  respond (payload) {
-    if (!payload) payload = ZERO
-    const message = new Writer()
+  readMessage (buf, messages) {
+    const wire = new Reader(buf)
 
-    // e
-    this.ephemeral = generateKey()
-
-    this.e = this.ephemeral.pub
-    this.mixHash(e)
-    message.write(e)
-
-    // ee
-    this.mixKey(re, this.ephemeral.priv)
-
-    // s
-    const s = this.encryptAndHash(this.static.pub)
-    message.write(s)
-
-    // se
-    this.mixKey(re, this.static.priv)
-
-    const ciphertext = this.encryptAndHash(payload)
-    message.write(ciphertext)
-
-    return message.final()
-  }
-
-  // <- s, se
-  final (buf, offset) {
-    const message = new Reader(buf)
-
-    this.readMessage(wire, 's,se')
-
-    this.receiver = this.finalKey(hkdf(this.chainingKey, ZERO)[0])
-    this.sender = this.finalKey(hkdf(this.chainingKey, ZERO)[1])
-
-    return payload
-  }
-
-  readMessage (wire, messages) {
-    for (let pattern of messages.split(',')) {
+    for (const pattern of messages.split(',')) {
       switch (pattern) {
         case 'e' :
           this.re = wire.read(DHLEN)
-          this.mixHash(e)
+          this.mixHash(this.re)
           break
 
         case 's' :
@@ -194,12 +101,12 @@ module.exports.Responder = class Responder extends CipherState {
           this.rs = this.decryptAndHash(wire.read(klen))
           break
 
-        case 'se' :
-        case 'ee' :
         case 'es' :
+        case 'ee' :
+        case 'se' :
         case 'ss' :
-          let remoteKey = pattern[0] === 's' ? this.rs : this.re
-          let localKey = pattern[1] === 's' ? this.static.priv : this.ephemeral.priv
+          const remoteKey = pattern[this.initiator ? 1 : 0] === 's' ? this.rs : this.re
+          const localKey = pattern[this.initiator ? 0 : 1] === 's' ? this.static.priv : this.ephemeral.priv
           this.mixKey(remoteKey, localKey)
           break
 
@@ -208,13 +115,16 @@ module.exports.Responder = class Responder extends CipherState {
       }
     }
 
-    return this.decryptAndHash(buf)
+    const payload = this.decryptAndHash(wire.read())
+
+    if (this.handshakeStep === this.messages.length) this.final()
+    return payload
   }
 
-  sendMessage (messages) {
+  sendMessage (payload = Buffer.alloc(0), messages) {
     const wire = new Writer()
 
-    for (let pattern of messages.split(',')) {
+    for (const pattern of messages.split(',')) {
       switch (pattern) {
         case 'e' :
           if (this.ephemeral === null) this.ephemeral = generateKey()
@@ -226,12 +136,12 @@ module.exports.Responder = class Responder extends CipherState {
           wire.write(this.encryptAndHash(this.static.pub))
           break
 
-        case 'se' :
-        case 'ee' :
         case 'es' :
+        case 'ee' :
+        case 'se' :
         case 'ss' :
-          let remoteKey = pattern[0] === 's' ? this.rs : this.re
-          let localKey = pattern[1] === 's' ? this.static.priv : this.ephemeral.priv
+          const remoteKey = pattern[this.initiator ? 1 : 0] === 's' ? this.rs : this.re
+          const localKey = pattern[this.initiator ? 0 : 1] === 's' ? this.static.priv : this.ephemeral.priv
           this.mixKey(remoteKey, localKey)
           break
 
@@ -239,6 +149,11 @@ module.exports.Responder = class Responder extends CipherState {
           throw new Error('Unexpected message')
       }
     }
+
+    wire.write(this.encryptAndHash(payload))
+
+    if (this.handshakeStep === this.messages.length) this.final()
+    return wire.final()
   }
 }
 
@@ -247,7 +162,7 @@ function generateKey (privKey) {
 
   keyPair.priv = privKey || Buffer.alloc(SKLEN)
   keyPair.pub = Buffer.alloc(PKLEN)
-  generateKeyPair(keyPair.pub, keyPair.priv)
+  generateKeypair(keyPair.pub, keyPair.priv)
 
   return keyPair
 }
