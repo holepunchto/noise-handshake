@@ -1,12 +1,12 @@
 const assert = require('nanoassert')
-const sodium = require('sodium-native')
+const hmacBlake2b = require('hmac-blake2b')
 
-const HASHLEN = 32
-module.exports = function hkdf (salt, inputKeyMaterial, info = '', length = 64) {
+const HASHLEN = 64
+module.exports = function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
   const pseudoRandomKey = hkdfExtract(salt, inputKeyMaterial)
   const result = hkdfExpand(pseudoRandomKey, info, length)
 
-  const [k1, k2] = [result.slice(0, 32), result.slice(32)]
+  const [k1, k2] = [result.slice(0, HASHLEN), result.slice(HASHLEN)]
 
   return [k1, k2]
 
@@ -14,23 +14,13 @@ module.exports = function hkdf (salt, inputKeyMaterial, info = '', length = 64) 
     return hmacDigest(salt, inputKeyMaterial)
   }
 
-  function hkdfExpand (key, info = '', length = 64) {
-    const T = [Buffer.from('')]
+  function hkdfExpand (key, info, length) {
+    const T = [Buffer.from(info)]
     const lengthRatio = length / HASHLEN
 
     for (let i = 0; i < lengthRatio; i++) {
-      const toHash = new Uint8Array(T[i].byteLength + info.length + 1)
-
-      toHash.set(T[i])
-      let offset = T[i].byteLength
-
-      if (info.length) {
-        const infoBuf = Buffer.from(info)
-        toHash.set(infoBuf, offset)
-        offset += infoBuf.byteLength
-      }
-
-      toHash[offset] = i + 1
+      const infoBuf = Buffer.from(info)
+      const toHash = Buffer.concat([T[i], infoBuf, Buffer.from([i + 1])])
 
       T[i + 1] = hmacDigest(key, toHash)
     }
@@ -43,8 +33,8 @@ module.exports = function hkdf (salt, inputKeyMaterial, info = '', length = 64) 
 }
 
 function hmacDigest (key, input) {
-  const hmac = Buffer.alloc(sodium.crypto_generichash_BYTES)
-  sodium.crypto_generichash(hmac, input, key)
+  const hmac = Buffer.alloc(HASHLEN)
+  hmacBlake2b(hmac, input, key)
 
   return hmac
 }

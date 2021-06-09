@@ -21,10 +21,14 @@ module.exports = {
   dh
 }
 
-function generateKeypair (pk, sk) {
-  assert(pk.byteLength === PKLEN)
-  assert(sk.byteLength === SKLEN)
-  crypto_kx_keypair(pk, sk)
+function generateKeypair (privKey) {
+  const keyPair = {}
+
+  keyPair.priv = privKey || Buffer.alloc(SKLEN)
+  keyPair.pub = Buffer.alloc(PKLEN)
+  crypto_kx_keypair(keyPair.pub, keyPair.priv)
+
+  return keyPair
 }
 
 function generateSeedKeypair (pk, sk, seed) {

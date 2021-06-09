@@ -1,37 +1,58 @@
 const { Writer, Reader } = require('wire-encoder')
 const assert = require('nanoassert')
 
-const { generateKeypair, DHLEN, PKLEN, SKLEN, ALG } = require('./dh.js')
-const SymmetricState = require('./state')
+const dh = require('./dh.js')
+const { generateKeypair, DHLEN } = dh
+const SymmetricState = require('./symmetric-state')
 
-const HANDSHAKES = {
-  XX: {
-    messages: ['e', 'e,ee,s,es', 's,se']
-  },
-  IK: {
-    responderPreshare: true,
-    messages: ['e,es,s,ss', 'e,ee,se']
-  }
-}
+const INITIATOR = Symbol('initiator')
+const RESPONDER = Symbol('responder')
+
+const PRESHARE_IS = Symbol('initiator static key preshared')
+const PRESHARE_RS = Symbol('responder static key preshared')
+
+const TOK_S = Symbol('s')
+const TOK_E = Symbol('e')
+
+const TOK_ES = Symbol('es')
+const TOK_SE = Symbol('se')
+const TOK_EE = Symbol('ee')
+const TOK_SS = Symbol('ss')
+
+const HANDSHAKES = Object.freeze({
+  XX: [
+    [TOK_E],
+    [TOK_E, TOK_EE, TOK_S, TOK_ES],
+    [TOK_S, TOK_SE]
+  ],
+  IK: [
+    PRESHARE_RS,
+    [TOK_E, TOK_ES, TOK_S, TOK_SS],
+    [TOK_E, TOK_EE, TOK_SE]
+  ]
+})
 
 module.exports = class NoiseState extends SymmetricState {
-  constructor (pattern, initiator, staticKey) {
+  constructor (pattern, initiator, staticKeypair) {
     super()
 
-    this.static = staticKey ? generateKey(staticKey) : generateKey()
-    this.ephemeral = null
+    this.s = staticKeypair ? staticKeypair : generateKeypair()
+    this.e = null
 
     this.re = null
     this.rs = null
 
     this.pattern = pattern
-    this.handshake = HANDSHAKES[this.pattern]
-    this.messages = this.handshake.messages
+    this.handshake = HANDSHAKES[this.pattern].slice()
 
-    this.protocol = Buffer.from(['Noise', this.pattern, ALG, this.constructor.alg].join('_'))
+    this.protocol = Buffer.from([
+      'Noise',
+      this.pattern,
+      dh.ALG,
+      this.constructor.alg
+    ].join('_'))
 
     this.initiator = initiator
-    this.handshakeStep = 0
     this.handshakeComplete = false
 
     this.rx = null
@@ -39,42 +60,32 @@ module.exports = class NoiseState extends SymmetricState {
   }
 
   initialise (prologue, remoteStatic) {
-    this.mixHash(this.protocol)
-    this.chainingKey = this.digest.slice()
+    if (prologue.byteLength <= 64) this.digest.set(this.protocol)
+    else this.mixHash(this.protocol)
+
+    this.chainingKey = Buffer.from(this.digest)
 
     this.mixHash(prologue)
 
-    if (this.handshake.responderPreshare) {
-      if (this.initiator) this.rs = remoteStatic
+    while (!Array.isArray(this.handshake[0])) {
+      const message = this.handshake.shift()
 
-      const key = this.initiator ? this.rs : this.static.pub
+      // handshake steps should be as arrays, only
+      // preshare tokens are provided otherwise
+      assert(message === PRESHARE_RS || message === PRESHARE_IS,
+        'Unexpected pattern')
+
+      const takeRemoteKey = this.initiator
+        ? message === PRESHARE_RS
+        : message === PRESHARE_IS
+
+      if (takeRemoteKey) this.rs = remoteStatic
+
+      const key = takeRemoteKey ? this.rs : this.s.pub
       assert(key != null, 'Remote pubkey required')
 
-      this.mixHash(this.initiator ? this.rs : this.static.pub)
+      this.mixHash(key)
     }
-
-    if (this.handshake.initiatorPreshare) {
-      if (!this.initiator) this.rs = remoteStatic
-
-      const key = this.initiator ? this.static.pub : this.rs
-      assert(key != null, 'Remote pubkey required')
-
-      this.mixHash(this.initiator ? this.static.pub : this.rs)
-    }
-  }
-
-  send (payload = Buffer.alloc(0)) {
-    assert(!(this.handshakeStep % 2) === this.initiator, 'Unexpected handshake state')
-
-    const pattern = this.messages[this.handshakeStep++]
-    return this.sendMessage(payload, pattern)
-  }
-
-  recv (buf) {
-    assert(!!(this.handshakeStep % 2) === this.initiator, 'Unexpected handshake state')
-
-    const pattern = this.messages[this.handshakeStep++]
-    return this.readMessage(buf, pattern)
   }
 
   final () {
@@ -86,27 +97,30 @@ module.exports = class NoiseState extends SymmetricState {
     this.handshakeComplete = true
   }
 
-  readMessage (buf, messages) {
+  recv (buf) {
     const wire = new Reader(buf)
 
-    for (const pattern of messages.split(',')) {
+    for (const pattern of this.handshake.shift()) {
       switch (pattern) {
-        case 'e' :
+        case TOK_E :
           this.re = wire.read(DHLEN)
           this.mixHash(this.re)
           break
 
-        case 's' :
+        case TOK_S :
           const klen = this.hasKey ? DHLEN + 16 : DHLEN
           this.rs = this.decryptAndHash(wire.read(klen))
           break
 
-        case 'es' :
-        case 'ee' :
-        case 'se' :
-        case 'ss' :
-          const remoteKey = pattern[this.initiator ? 1 : 0] === 's' ? this.rs : this.re
-          const localKey = pattern[this.initiator ? 0 : 1] === 's' ? this.static.priv : this.ephemeral.priv
+        case TOK_EE :
+        case TOK_ES :
+        case TOK_SE :
+        case TOK_SS :
+          const useStatic = keyPattern(pattern, this.initiator)
+
+          const localKey = useStatic.local ? this.s.priv : this.e.priv
+          const remoteKey = useStatic.remote ? this.rs : this.re
+
           this.mixKey(remoteKey, localKey)
           break
 
@@ -117,31 +131,34 @@ module.exports = class NoiseState extends SymmetricState {
 
     const payload = this.decryptAndHash(wire.read())
 
-    if (this.handshakeStep === this.messages.length) this.final()
+    if (!this.handshake.length) this.final()
     return payload
   }
 
-  sendMessage (payload = Buffer.alloc(0), messages) {
+  send (payload = Buffer.alloc(0)) {
     const wire = new Writer()
 
-    for (const pattern of messages.split(',')) {
+    for (const pattern of this.handshake.shift()) {
       switch (pattern) {
-        case 'e' :
-          if (this.ephemeral === null) this.ephemeral = generateKey()
-          this.mixHash(this.ephemeral.pub)
-          wire.write(this.ephemeral.pub)
+        case TOK_E :
+          if (this.e === null) this.e = generateKeypair()
+          this.mixHash(this.e.pub)
+          wire.write(this.e.pub)
           break
 
-        case 's' :
-          wire.write(this.encryptAndHash(this.static.pub))
+        case TOK_S :
+          wire.write(this.encryptAndHash(this.s.pub))
           break
 
-        case 'es' :
-        case 'ee' :
-        case 'se' :
-        case 'ss' :
-          const remoteKey = pattern[this.initiator ? 1 : 0] === 's' ? this.rs : this.re
-          const localKey = pattern[this.initiator ? 0 : 1] === 's' ? this.static.priv : this.ephemeral.priv
+        case TOK_ES :
+        case TOK_SE :
+        case TOK_EE :
+        case TOK_SS :
+          const useStatic = keyPattern(pattern, this.initiator)
+
+          const localKey = useStatic.local ? this.s.priv : this.e.priv
+          const remoteKey = useStatic.remote ? this.rs : this.re
+
           this.mixKey(remoteKey, localKey)
           break
 
@@ -152,17 +169,34 @@ module.exports = class NoiseState extends SymmetricState {
 
     wire.write(this.encryptAndHash(payload))
 
-    if (this.handshakeStep === this.messages.length) this.final()
+    if (!this.handshake.length) this.final()
     return wire.final()
   }
 }
 
-function generateKey (privKey) {
-  const keyPair = {}
+function keyPattern (pattern, initiator) {
+  let ret = {
+    local: false,
+    remote: false
+  }
 
-  keyPair.priv = privKey || Buffer.alloc(SKLEN)
-  keyPair.pub = Buffer.alloc(PKLEN)
-  generateKeypair(keyPair.pub, keyPair.priv)
+  switch (pattern) {
+    case TOK_EE:
+      return ret
 
-  return keyPair
+    case TOK_ES:
+      ret.local ^= !initiator
+      ret.remote ^= initiator
+      return ret
+
+    case TOK_SE:
+      ret.local ^= initiator
+      ret.remote ^= !initiator
+      return ret
+
+    case TOK_SS:
+      ret.local ^= 1
+      ret.remote ^= 1
+      return ret
+  }
 }
