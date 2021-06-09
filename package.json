@@ -8,6 +8,10 @@
   },
   "author": "",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chm-diederichs/simple-noise.git"
+  },
   "dependencies": {
     "hmac-blake2b": "^2.0.0",
     "nanoassert": "^2.0.0",
