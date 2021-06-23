@@ -4,7 +4,7 @@
   "description": "",
   "main": "cipher.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tape test/*.js"
   },
   "author": "",
   "license": "ISC",
@@ -16,11 +16,10 @@
     "hmac-blake2b": "^2.0.0",
     "nanoassert": "^2.0.0",
     "sodium-native": "^3.2.1",
-    "sodium-universal": "^3.0.4",
-    "wire-encoder": "^1.0.2"
+    "sodium-universal": "^3.0.4"
   },
   "devDependencies": {
-    "noise-protocol": "^3.0.1",
+    "noise-protocol": "git+ssh://git@github.com/chm-diederichs/noise-protocol.git#xx-ephemeral-key",
     "tape": "^5.2.2"
   }
 }
