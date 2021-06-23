@@ -1,5 +1,5 @@
 const test = require('tape')
-const NoiseState = require('./noise.js')
+const NoiseState = require('../noise.js')
 
 test('IK', t => {
   const initiator = new NoiseState('IK', true)

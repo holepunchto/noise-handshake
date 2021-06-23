@@ -1,4 +1,3 @@
-const { Writer, Reader } = require('wire-encoder')
 const assert = require('nanoassert')
 
 const dh = require('./dh.js')
@@ -31,6 +30,46 @@ const HANDSHAKES = Object.freeze({
     [TOK_E, TOK_EE, TOK_SE]
   ]
 })
+
+class Writer {
+  constructor () {
+    this.size = 0
+    this.buffers = []
+  }
+
+  push (b) {
+    this.size += b.byteLength
+    this.buffers.push(b)
+  }
+
+  end () {
+    const all = new Uint8Array(this.size)
+    let offset = 0
+    for (const b of this.buffers) {
+      all.set(b, offset)
+      offset += b.byteLength
+    }
+    return all
+  }
+}
+
+class Reader {
+  constructor (buf) {
+    this.offset = 0
+    this.buffer = buf
+  }
+
+  shift (n) {
+    const start = this.offset
+    const end = this.offset += n
+    if (end > this.buffer.byteLength) throw new Error('Insufficient bytes')
+    return this.buffer.subarray(start, end)
+  }
+
+  end () {
+    return this.shift(this.buffer.byteLength - this.offset)
+  }
+}
 
 module.exports = class NoiseState extends SymmetricState {
   constructor (pattern, initiator, staticKeypair) {
@@ -98,18 +137,18 @@ module.exports = class NoiseState extends SymmetricState {
   }
 
   recv (buf) {
-    const wire = new Reader(buf)
+    const r = new Reader(buf)
 
     for (const pattern of this.handshake.shift()) {
       switch (pattern) {
         case TOK_E :
-          this.re = wire.read(DHLEN)
+          this.re = r.shift(DHLEN)
           this.mixHash(this.re)
           break
 
         case TOK_S :
           const klen = this.hasKey ? DHLEN + 16 : DHLEN
-          this.rs = this.decryptAndHash(wire.read(klen))
+          this.rs = this.decryptAndHash(r.shift(klen))
           break
 
         case TOK_EE :
@@ -129,25 +168,25 @@ module.exports = class NoiseState extends SymmetricState {
       }
     }
 
-    const payload = this.decryptAndHash(wire.read())
+    const payload = this.decryptAndHash(r.end())
 
     if (!this.handshake.length) this.final()
     return payload
   }
 
   send (payload = Buffer.alloc(0)) {
-    const wire = new Writer()
+    const w = new Writer()
 
     for (const pattern of this.handshake.shift()) {
       switch (pattern) {
         case TOK_E :
           if (this.e === null) this.e = generateKeypair()
           this.mixHash(this.e.pub)
-          wire.write(this.e.pub)
+          w.push(this.e.pub)
           break
 
         case TOK_S :
-          wire.write(this.encryptAndHash(this.s.pub))
+          w.push(this.encryptAndHash(this.s.pub))
           break
 
         case TOK_ES :
@@ -167,10 +206,10 @@ module.exports = class NoiseState extends SymmetricState {
       }
     }
 
-    wire.write(this.encryptAndHash(payload))
+    w.push(this.encryptAndHash(payload))
 
     if (!this.handshake.length) this.final()
-    return wire.final()
+    return w.end()
   }
 }
 

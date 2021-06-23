@@ -39,8 +39,8 @@ test('XX handshake with reference impl', t => {
     publicKey: responder.e.pub
   }
 
-  const client = ref.initialize('XX', true, Buffer.alloc(0), sClient, eClient)
-  const server = ref.initialize('XX', false, Buffer.alloc(0), sServer, eServer)
+  const client = ref.initialize('XX', true, Buffer.alloc(0), sClient)
+  const server = ref.initialize('XX', false, Buffer.alloc(0), sServer)
 
   const clientTx = Buffer.alloc(512)
   const serverRx = Buffer.alloc(512)
