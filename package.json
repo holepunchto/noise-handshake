@@ -19,7 +19,7 @@
     "sodium-universal": "^3.0.4"
   },
   "devDependencies": {
-    "noise-protocol": "^3.0.1",
+    "noise-protocol": "git+ssh://git@github.com/chm-diederichs/noise-protocol.git#xx-ephemeral-key",
     "tape": "^5.2.2"
   }
 }
