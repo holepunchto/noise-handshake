@@ -1,4 +1,4 @@
-const sodium = require('sodium-native')
+const sodium = require('sodium-universal')
 
 module.exports = class CipherState {
   constructor (key) {

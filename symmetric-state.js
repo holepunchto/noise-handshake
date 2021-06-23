@@ -1,4 +1,4 @@
-const sodium = require('sodium-native')
+const sodium = require('sodium-universal')
 const CipherState = require('./cipher')
 const curve = require('./dh')
 const hkdf = require('./hkdf')
