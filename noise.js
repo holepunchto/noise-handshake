@@ -143,15 +143,16 @@ module.exports = class NoiseState extends SymmetricState {
           this.mixHash(this.re)
           break
 
-        case TOK_S :
+        case TOK_S : {
           const klen = this.hasKey ? DHLEN + 16 : DHLEN
           this.rs = this.decryptAndHash(r.shift(klen))
           break
+        }
 
         case TOK_EE :
         case TOK_ES :
         case TOK_SE :
-        case TOK_SS :
+        case TOK_SS : {
           const useStatic = keyPattern(pattern, this.initiator)
 
           const localKey = useStatic.local ? this.s.priv : this.e.priv
@@ -159,6 +160,7 @@ module.exports = class NoiseState extends SymmetricState {
 
           this.mixKey(remoteKey, localKey)
           break
+        }
 
         default :
           throw new Error('Unexpected message')
@@ -189,7 +191,7 @@ module.exports = class NoiseState extends SymmetricState {
         case TOK_ES :
         case TOK_SE :
         case TOK_EE :
-        case TOK_SS :
+        case TOK_SS : {
           const useStatic = keyPattern(pattern, this.initiator)
 
           const localKey = useStatic.local ? this.s.priv : this.e.priv
@@ -197,6 +199,7 @@ module.exports = class NoiseState extends SymmetricState {
 
           this.mixKey(remoteKey, localKey)
           break
+        }
 
         default :
           throw new Error('Unexpected message')

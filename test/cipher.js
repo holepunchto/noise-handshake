@@ -82,27 +82,27 @@ test('identity with ad', function (assert) {
   assert.end()
 })
 
-test.skip('rekey', function (assert) {
-  const key = Buffer.alloc(Cipher.KEYBYTES)
-  const nonce = Buffer.alloc(Cipher.NONCEBYTES)
-  randombytes_buf(key)
-  randombytes_buf(nonce)
+// test.skip('rekey', function (assert) {
+//   const key = Buffer.alloc(Cipher.KEYBYTES)
+//   const nonce = Buffer.alloc(Cipher.NONCEBYTES)
+//   randombytes_buf(key)
+//   randombytes_buf(nonce)
 
-  const keyCopy = Buffer.from(key)
-  cipher.rekey(key, key)
-  assert.notOk(key.equals(keyCopy))
+//   const keyCopy = Buffer.from(key)
+//   cipher.rekey(key, key)
+//   assert.notOk(key.equals(keyCopy))
 
-  const plaintext = Buffer.from('Hello world')
-  const ciphertext = Buffer.alloc(plaintext.byteLength + Cipher.MACBYTES)
-  const decrypted = Buffer.alloc(plaintext.byteLength)
+//   const plaintext = Buffer.from('Hello world')
+//   const ciphertext = Buffer.alloc(plaintext.byteLength + Cipher.MACBYTES)
+//   const decrypted = Buffer.alloc(plaintext.byteLength)
 
-  cipher.encrypt(ciphertext, key, nonce, null, plaintext)
+//   cipher.encrypt(ciphertext, key, nonce, null, plaintext)
 
-  assert.throws(_ => cipher.decrypt(ciphertext, null), 'wrong key')
+//   assert.throws(_ => cipher.decrypt(ciphertext, null), 'wrong key')
 
-  cipher.rekey(keyCopy, keyCopy)
-  cipher.decrypt(decrypted, keyCopy, nonce, null, ciphertext)
+//   cipher.rekey(keyCopy, keyCopy)
+//   cipher.decrypt(decrypted, keyCopy, nonce, null, ciphertext)
 
-  assert.ok(decrypted.equals(plaintext))
-  assert.end()
-})
+//   assert.ok(decrypted.equals(plaintext))
+//   assert.end()
+// })

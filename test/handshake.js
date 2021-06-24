@@ -8,8 +8,6 @@ test('IK', t => {
   initiator.initialise(Buffer.alloc(0), responder.s.pub)
   responder.initialise(Buffer.alloc(0))
 
-  let reply
-  i = 0
   while (!initiator.handshakeComplete) {
     const message = initiator.send()
     responder.recv(message)
@@ -22,7 +20,7 @@ test('IK', t => {
 
   t.deepEqual(initiator.rx.key, responder.tx.key)
   t.deepEqual(initiator.tx.key, responder.rx.key)
-  t.end() 
+  t.end()
 })
 
 test('XX', t => {
@@ -32,7 +30,6 @@ test('XX', t => {
   initiator.initialise(Buffer.alloc(0))
   responder.initialise(Buffer.alloc(0))
 
-  let reply
   while (!initiator.handshakeComplete) {
     const message = initiator.send()
     responder.recv(message)
@@ -45,5 +42,5 @@ test('XX', t => {
 
   t.deepEqual(initiator.rx.key, responder.tx.key)
   t.deepEqual(initiator.tx.key, responder.rx.key)
-  t.end() 
+  t.end()
 })

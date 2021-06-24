@@ -4,7 +4,7 @@
   "description": "",
   "main": "cipher.js",
   "scripts": {
-    "test": "tape test/*.js"
+    "test": "standard && tape test/*.js"
   },
   "author": "",
   "license": "ISC",
@@ -19,9 +19,7 @@
   },
   "devDependencies": {
     "noise-protocol": "chm-diederichs/noise-protocol.git#xx-ephemeral-key",
+    "standard": "^16.0.3",
     "tape": "^5.2.2"
-  },
-  "scripts": {
-    "test": "tape test/*.js"
   }
 }
