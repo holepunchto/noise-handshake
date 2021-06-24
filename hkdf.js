@@ -2,7 +2,13 @@ const assert = require('nanoassert')
 const hmacBlake2b = require('hmac-blake2b')
 
 const HASHLEN = 64
-module.exports = function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
+
+module.exports = {
+  hkdf,
+  HASHLEN
+}
+
+function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
   const pseudoRandomKey = hkdfExtract(salt, inputKeyMaterial)
   const result = hkdfExpand(pseudoRandomKey, info, length)
 

@@ -7,23 +7,21 @@ test('constants', function (assert) {
 })
 
 test('generateKeypair', function (assert) {
-  const kp1 = { sk: Buffer.alloc(dh.SKLEN), pk: Buffer.alloc(dh.PKLEN) }
-  const kp2 = { sk: Buffer.alloc(dh.SKLEN), pk: Buffer.alloc(dh.PKLEN) }
-  const kp3 = { sk: Buffer.alloc(dh.SKLEN), pk: Buffer.alloc(dh.PKLEN) }
+  const kp1 = { pk: Buffer.alloc(dh.PKLEN), sk: Buffer.alloc(dh.SKLEN) }
 
-  dh.generateKeypair(kp2.pk, kp2.sk)
-  dh.generateKeypair(kp3.pk, kp3.sk)
+  const kp2 = dh.generateKeypair()
+  const kp3 = dh.generateKeypair()
 
-  assert.notOk(kp1.pk.equals(kp2.pk))
-  assert.notOk(kp1.pk.equals(kp3.pk))
-  assert.notOk(kp2.pk.equals(kp3.pk))
+  assert.notOk(kp1.pk.equals(kp2.pub))
+  assert.notOk(kp1.pk.equals(kp3.pub))
+  assert.notOk(kp2.pub.equals(kp3.pub))
 
-  assert.notOk(kp1.sk.equals(kp2.sk))
-  assert.notOk(kp2.sk.equals(kp3.sk))
-  assert.notOk(kp1.sk.equals(kp3.sk))
+  assert.notOk(kp1.sk.equals(kp2.priv))
+  assert.notOk(kp2.priv.equals(kp3.priv))
+  assert.notOk(kp1.sk.equals(kp3.priv))
 
-  assert.notOk(kp2.pk.equals(kp2.sk))
-  assert.notOk(kp3.pk.equals(kp3.sk))
+  assert.notOk(kp2.pub.equals(kp2.priv))
+  assert.notOk(kp3.pub.equals(kp3.priv))
 
   assert.end()
 })

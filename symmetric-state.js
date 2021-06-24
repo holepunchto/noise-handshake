@@ -1,13 +1,14 @@
 const sodium = require('sodium-universal')
+const assert = require('nanoassert')
 const CipherState = require('./cipher')
 const curve = require('./dh')
-const hkdf = require('./hkdf')
+const { HASHLEN, hkdf } = require('./hkdf')
 
 module.exports = class SymmetricState extends CipherState {
   constructor () {
     super()
 
-    this.digest = Buffer.alloc(64)
+    this.digest = Buffer.alloc(HASHLEN)
     this.chainingKey = null
     this.offset = 0
   }
@@ -33,6 +34,14 @@ module.exports = class SymmetricState extends CipherState {
     const plaintext = this.decrypt(ciphertext, this.digest)
     accumulateDigest(this.digest, ciphertext)
     return plaintext
+  }
+
+  getHandshakeHash (out) {
+    if (!out) return this.getHandshakeHash(Buffer.alloc(HASHLEN))
+    assert(out.byteLength === HASHLEN, `output must be ${HASHLEN} bytes`)
+
+    out.set(this.digest)
+    return out
   }
 
   split () {
