@@ -2,7 +2,7 @@
   "name": "simple-noise",
   "version": "1.0.0",
   "description": "",
-  "main": "cipher.js",
+  "main": "noise.js",
   "scripts": {
     "test": "standard && tape test/*.js"
   },
