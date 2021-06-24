@@ -22,6 +22,6 @@
     "tape": "^5.2.2"
   },
   "scripts": {
-    "test": "TEST=\"./test/*.js\"; for file in $TEST; do node $file; done"
+    "test": "tape test/*.js"
   }
 }
