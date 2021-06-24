@@ -58,8 +58,8 @@ module.exports = class CipherState {
 
 function encryptWithAD (key, counter, additionalData, plaintext) {
   // for our purposes, additionalData will always be a pubkey so we encode from hex
-  if (!additionalData instanceof Uint8Array) additionalData = Buffer.from(additionalData, 'hex')
-  if (!plaintext instanceof Uint8Array) plaintext = Buffer.from(plaintext, 'hex')
+  if (!(additionalData instanceof Uint8Array)) additionalData = Buffer.from(additionalData, 'hex')
+  if (!(plaintext instanceof Uint8Array)) plaintext = Buffer.from(plaintext, 'hex')
 
   const nonce = Buffer.alloc(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
   nonce.writeUInt32LE(counter, 4)
@@ -72,8 +72,8 @@ function encryptWithAD (key, counter, additionalData, plaintext) {
 
 function decryptWithAD (key, counter, additionalData, ciphertext) {
   // for our purposes, additionalData will always be a pubkey so we encode from hex
-  if (!additionalData instanceof Uint8Array) additionalData = Buffer.from(additionalData, 'hex')
-  if (!ciphertext instanceof Uint8Array) ciphertext = Buffer.from(ciphertext, 'hex')
+  if (!(additionalData instanceof Uint8Array)) additionalData = Buffer.from(additionalData, 'hex')
+  if (!(ciphertext instanceof Uint8Array)) ciphertext = Buffer.from(ciphertext, 'hex')
 
   const nonce = Buffer.alloc(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
   nonce.writeUInt32LE(counter, 4)

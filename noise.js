@@ -4,9 +4,6 @@ const dh = require('./dh.js')
 const { generateKeypair, DHLEN } = dh
 const SymmetricState = require('./symmetric-state')
 
-const INITIATOR = Symbol('initiator')
-const RESPONDER = Symbol('responder')
-
 const PRESHARE_IS = Symbol('initiator static key preshared')
 const PRESHARE_RS = Symbol('responder static key preshared')
 
@@ -75,7 +72,7 @@ module.exports = class NoiseState extends SymmetricState {
   constructor (pattern, initiator, staticKeypair) {
     super()
 
-    this.s = staticKeypair ? staticKeypair : generateKeypair()
+    this.s = staticKeypair || generateKeypair()
     this.e = null
 
     this.re = null
@@ -214,7 +211,7 @@ module.exports = class NoiseState extends SymmetricState {
 }
 
 function keyPattern (pattern, initiator) {
-  let ret = {
+  const ret = {
     local: false,
     remote: false
   }

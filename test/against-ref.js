@@ -133,7 +133,6 @@ test('IK handshake against reference impl', t => {
     publicKey: responder.s.pub
   }
 
-  let reply
   while (!initiator.handshakeComplete) {
     const message = initiator.send()
     responder.recv(message)
@@ -274,7 +273,7 @@ test('IK handshake with reference client', t => {
     let payload = randomBytes(128)
 
     splitServer = ref.writeMessage(client, payload, clientTx)
-    let check = responder.recv(clientTx.subarray(0, ref.writeMessage.bytes))
+    const check = responder.recv(clientTx.subarray(0, ref.writeMessage.bytes))
 
     t.same(payload, check)
     t.same(responder.getHandshakeHash(), getHash(client))
@@ -372,7 +371,7 @@ test('XX handshake with reference client', t => {
     let payload = randomBytes(128)
 
     splitServer = ref.writeMessage(client, payload, clientTx)
-    let check = responder.recv(clientTx.subarray(0, ref.writeMessage.bytes))
+    const check = responder.recv(clientTx.subarray(0, ref.writeMessage.bytes))
 
     t.same(payload, check)
     t.same(responder.getHandshakeHash(), getHash(client))
