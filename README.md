@@ -1,8 +1,8 @@
-# simple-noise
+# basic-noise
 
 ## Usage
 ```js
-const Noise = require('simple-noise')
+const Noise = require('basic-noise')
 const initiator = new Noise('IK ', true)
 const responder = new Noise('IK', false)
 
