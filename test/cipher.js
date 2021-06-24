@@ -71,7 +71,7 @@ test('identity with ad', function (assert) {
 
   for (let i = 0; i < ciphertext.length; i++) {
     ciphertext[i] ^= 255
-    assert.throws(_ => cipher.decrypt(decrypted, key, nonce, ad, ciphertext))
+    assert.throws(_ => cipher.decrypt(ciphertext, ad))
     ciphertext[i] ^= 255
   }
 
@@ -98,7 +98,7 @@ test.skip('rekey', function (assert) {
 
   cipher.encrypt(ciphertext, key, nonce, null, plaintext)
 
-  assert.throws(_ => cipher.decrypt(decrypted, keyCopy, nonce, null, ciphertext), 'wrong key')
+  assert.throws(_ => cipher.decrypt(ciphertext, null), 'wrong key')
 
   cipher.rekey(keyCopy, keyCopy)
   cipher.decrypt(decrypted, keyCopy, nonce, null, ciphertext)

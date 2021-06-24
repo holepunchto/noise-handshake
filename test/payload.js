@@ -10,7 +10,6 @@ test('IK with payload', t => {
 
   const payload1 = Buffer.alloc(2, 1)
   const payload2 = Buffer.alloc(3, 2)
-  const payload3 = Buffer.alloc(4, 3)
 
   let message = initiator.send(payload1)
   t.deepEqual(Buffer.from(responder.recv(message)), payload1)
@@ -20,7 +19,7 @@ test('IK with payload', t => {
 
   t.deepEqual(initiator.rx.key, responder.tx.key)
   t.deepEqual(initiator.tx.key, responder.rx.key)
-  t.end()  
+  t.end()
 })
 
 test('XX with payload', t => {
@@ -45,5 +44,5 @@ test('XX with payload', t => {
 
   t.deepEqual(initiator.rx.key, responder.tx.key)
   t.deepEqual(initiator.tx.key, responder.rx.key)
-  t.end()  
+  t.end()
 })
