@@ -1,5 +1,5 @@
 {
-  "name": "basic-noise",
+  "name": "noise-handshake",
   "version": "1.0.0",
   "description": "",
   "main": "noise.js",
@@ -10,7 +10,7 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chm-diederichs/basic-noise.git"
+    "url": "git+https://github.com/chm-diederichs/noise-handshake.git"
   },
   "dependencies": {
     "hmac-blake2b": "^2.0.0",
