@@ -5,12 +5,15 @@ const curve = require('./dh')
 const { HASHLEN, hkdf } = require('./hkdf')
 
 module.exports = class SymmetricState extends CipherState {
-  constructor () {
+  constructor (opts = {}) {
     super()
 
+    this.curve = opts.curve || curve
     this.digest = Buffer.alloc(HASHLEN)
     this.chainingKey = null
     this.offset = 0
+
+    this.DH_ALG = this.curve.alg
   }
 
   mixHash (data) {
@@ -18,7 +21,7 @@ module.exports = class SymmetricState extends CipherState {
   }
 
   mixKey (pubkey, seckey) {
-    const dh = curve.dh(pubkey, seckey)
+    const dh = this.curve.dh(pubkey, seckey)
     const hkdfResult = hkdf(this.chainingKey, dh)
     this.chainingKey = hkdfResult[0]
     this.initialiseKey(hkdfResult[1].subarray(0, 32))

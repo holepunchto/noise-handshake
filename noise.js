@@ -1,7 +1,5 @@
 const assert = require('nanoassert')
 
-const dh = require('./dh.js')
-const { generateKeypair, DHLEN } = dh
 const SymmetricState = require('./symmetric-state')
 
 const PRESHARE_IS = Symbol('initiator static key preshared')
@@ -69,10 +67,10 @@ class Reader {
 }
 
 module.exports = class NoiseState extends SymmetricState {
-  constructor (pattern, initiator, staticKeypair) {
-    super()
+  constructor (pattern, initiator, staticKeypair, opts = {}) {
+    super(opts)
 
-    this.s = staticKeypair || generateKeypair()
+    this.s = staticKeypair || this.curve.generateKeypair()
     this.e = null
 
     this.re = null
@@ -84,8 +82,8 @@ module.exports = class NoiseState extends SymmetricState {
     this.protocol = Buffer.from([
       'Noise',
       this.pattern,
-      dh.ALG,
-      this.constructor.alg
+      this.DH_ALG,
+      this.CIPHER_ALG
     ].join('_'))
 
     this.initiator = initiator
@@ -139,12 +137,12 @@ module.exports = class NoiseState extends SymmetricState {
     for (const pattern of this.handshake.shift()) {
       switch (pattern) {
         case TOK_E :
-          this.re = r.shift(DHLEN)
+          this.re = r.shift(this.curve.PKLEN)
           this.mixHash(this.re)
           break
 
         case TOK_S : {
-          const klen = this.hasKey ? DHLEN + 16 : DHLEN
+          const klen = this.hasKey ? this.curve.PKLEN + 16 : this.curve.PKLEN
           this.rs = this.decryptAndHash(r.shift(klen))
           break
         }
@@ -179,7 +177,7 @@ module.exports = class NoiseState extends SymmetricState {
     for (const pattern of this.handshake.shift()) {
       switch (pattern) {
         case TOK_E :
-          if (this.e === null) this.e = generateKeypair()
+          if (this.e === null) this.e = this.curve.generateKeypair()
           this.mixHash(this.e.pub)
           w.push(this.e.pub)
           break

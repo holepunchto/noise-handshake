@@ -4,6 +4,7 @@ module.exports = class CipherState {
   constructor (key) {
     this.key = key || null
     this.nonce = 0
+    this.CIPHER_ALG = 'ChaChaPoly'
   }
 
   initialiseKey (key) {
@@ -37,10 +38,6 @@ module.exports = class CipherState {
 
   get hasKey () {
     return this.key !== null
-  }
-
-  static get alg () {
-    return 'ChaChaPoly'
   }
 
   static get MACBYTES () {
