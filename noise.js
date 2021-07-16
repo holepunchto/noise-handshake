@@ -70,7 +70,7 @@ module.exports = class NoiseState extends SymmetricState {
   constructor (pattern, initiator, staticKeypair, opts = {}) {
     super(opts)
 
-    this.s = staticKeypair || this.curve.generateKeypair()
+    this.s = staticKeypair || this.curve.generateKeyPair()
     this.e = null
 
     this.re = null
@@ -115,7 +115,7 @@ module.exports = class NoiseState extends SymmetricState {
 
       if (takeRemoteKey) this.rs = remoteStatic
 
-      const key = takeRemoteKey ? this.rs : this.s.pub
+      const key = takeRemoteKey ? this.rs : this.s.publicKey
       assert(key != null, 'Remote pubkey required')
 
       this.mixHash(key)
@@ -153,7 +153,7 @@ module.exports = class NoiseState extends SymmetricState {
         case TOK_SS : {
           const useStatic = keyPattern(pattern, this.initiator)
 
-          const localKey = useStatic.local ? this.s.priv : this.e.priv
+          const localKey = useStatic.local ? this.s.secretKey : this.e.secretKey
           const remoteKey = useStatic.remote ? this.rs : this.re
 
           this.mixKey(remoteKey, localKey)
@@ -177,13 +177,13 @@ module.exports = class NoiseState extends SymmetricState {
     for (const pattern of this.handshake.shift()) {
       switch (pattern) {
         case TOK_E :
-          if (this.e === null) this.e = this.curve.generateKeypair()
-          this.mixHash(this.e.pub)
-          w.push(this.e.pub)
+          if (this.e === null) this.e = this.curve.generateKeyPair()
+          this.mixHash(this.e.publicKey)
+          w.push(this.e.publicKey)
           break
 
         case TOK_S :
-          w.push(this.encryptAndHash(this.s.pub))
+          w.push(this.encryptAndHash(this.s.publicKey))
           break
 
         case TOK_ES :
@@ -192,7 +192,7 @@ module.exports = class NoiseState extends SymmetricState {
         case TOK_SS : {
           const useStatic = keyPattern(pattern, this.initiator)
 
-          const localKey = useStatic.local ? this.s.priv : this.e.priv
+          const localKey = useStatic.local ? this.s.secretKey : this.e.secretKey
           const remoteKey = useStatic.remote ? this.rs : this.re
 
           this.mixKey(remoteKey, localKey)

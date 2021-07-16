@@ -30,9 +30,25 @@ console.log(responder.tx.decrypt(enc)) // hello, world
 
 ## API
 
-#### `const peer = new Noise(pattern, initiator, staticKeypair)`
+#### `const peer = new Noise(pattern, initiator, staticKeypair, [opts])`
 
 Create a new handshake state for a given pattern. Initiator should be either `true` or `false` depending on the role. A preexisting keypair may be passed as `staticKeypair`
+
+`opts` is may be used to pass in a `curve` module for performing Noise over other curves.
+
+Curve modules should export the following:
+```
+{
+  DHLEN,
+  PKLEN,
+  SKLEN,
+  ALG,
+  generateKeyPair,
+  dh
+}
+```
+
+See [dh.js](./dh) for an example.
 
 #### `peer.initialise(prologue, remoteStatic)`
 
