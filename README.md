@@ -1,4 +1,4 @@
-# basic-noise
+# noise-handshake
 
 ## Usage
 ```js
