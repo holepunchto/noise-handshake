@@ -5,7 +5,7 @@ test('IK with payload', t => {
   const initiator = new Noise('IK', true)
   const responder = new Noise('IK', false)
 
-  initiator.initialise(Buffer.alloc(0), responder.s.pub)
+  initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
   responder.initialise(Buffer.alloc(0))
 
   const payload1 = Buffer.alloc(2, 1)

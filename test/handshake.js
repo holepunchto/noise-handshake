@@ -5,7 +5,7 @@ test('IK', t => {
   const initiator = new NoiseState('IK', true)
   const responder = new NoiseState('IK', false)
 
-  initiator.initialise(Buffer.alloc(0), responder.s.pub)
+  initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
   responder.initialise(Buffer.alloc(0))
 
   while (!initiator.handshakeComplete) {

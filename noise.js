@@ -83,7 +83,8 @@ module.exports = class NoiseState extends SymmetricState {
       'Noise',
       this.pattern,
       this.DH_ALG,
-      this.CIPHER_ALG
+      this.CIPHER_ALG,
+      'BLAKE2b'
     ].join('_'))
 
     this.initiator = initiator

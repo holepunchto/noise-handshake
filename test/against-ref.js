@@ -3,7 +3,7 @@ const ref = require('noise-protocol')
 const sodium = require('sodium-universal')
 const { getHandshakeHash } = require('noise-protocol/symmetric-state')
 const Noise = require('../noise')
-const { generateKeypair } = require('../dh')
+const { generateKeyPair } = require('../dh')
 
 test('XX handshake against reference impl', t => {
   const initiator = new Noise('XX', true)
@@ -12,17 +12,6 @@ test('XX handshake against reference impl', t => {
   const handshakeHash = Buffer.alloc(64)
   const handshakeHashes = []
   const refHandshakeHashes = []
-
-  // console.log(initiator)
-  const sClient = {
-    secretKey: initiator.s.priv,
-    publicKey: initiator.s.pub
-  }
-
-  const sServer = {
-    secretKey: responder.s.priv,
-    publicKey: responder.s.pub
-  }
 
   initiator.initialise(Buffer.alloc(0))
   responder.initialise(Buffer.alloc(0))
@@ -48,18 +37,8 @@ test('XX handshake against reference impl', t => {
   handshakeHashes.push(initiator.getHandshakeHash())
   handshakeHashes.push(responder.getHandshakeHash())
 
-  const eClient = {
-    secretKey: initiator.e.priv,
-    publicKey: initiator.e.pub
-  }
-
-  const eServer = {
-    secretKey: responder.e.priv,
-    publicKey: responder.e.pub
-  }
-
-  const client = ref.initialize('XX', true, Buffer.alloc(0), sClient, eClient)
-  const server = ref.initialize('XX', false, Buffer.alloc(0), sServer, eServer)
+  const client = ref.initialize('XX', true, Buffer.alloc(0), initiator.s, initiator.e)
+  const server = ref.initialize('XX', false, Buffer.alloc(0), responder.s, responder.e)
 
   storeHash(client, refHandshakeHashes)
   storeHash(server, refHandshakeHashes)
@@ -116,22 +95,11 @@ test('IK handshake against reference impl', t => {
   const handshakeHashes = []
   const refHandshakeHashes = []
 
-  initiator.initialise(Buffer.alloc(0), responder.s.pub)
+  initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
   responder.initialise(Buffer.alloc(0))
 
   handshakeHashes.push(initiator.getHandshakeHash())
   handshakeHashes.push(responder.getHandshakeHash())
-
-  // console.log(initiator)
-  const sClient = {
-    secretKey: initiator.s.priv,
-    publicKey: initiator.s.pub
-  }
-
-  const sServer = {
-    secretKey: responder.s.priv,
-    publicKey: responder.s.pub
-  }
 
   while (!initiator.handshakeComplete) {
     const message = initiator.send()
@@ -149,18 +117,8 @@ test('IK handshake against reference impl', t => {
     }
   }
 
-  const eClient = {
-    secretKey: initiator.e.priv,
-    publicKey: initiator.e.pub
-  }
-
-  const eServer = {
-    secretKey: responder.e.priv,
-    publicKey: responder.e.pub
-  }
-
-  const client = ref.initialize('IK', true, Buffer.alloc(0), sClient, eClient, sServer.publicKey)
-  const server = ref.initialize('IK', false, Buffer.alloc(0), sServer, eServer)
+  const client = ref.initialize('IK', true, Buffer.alloc(0), initiator.s, initiator.e, responder.s.publicKey)
+  const server = ref.initialize('IK', false, Buffer.alloc(0), responder.s, responder.e)
 
   const clientTx = Buffer.alloc(512)
   const serverRx = Buffer.alloc(512)
@@ -205,16 +163,11 @@ test('IK handshake against reference impl', t => {
 
 test('IK handshake with reference server', t => {
   const initiator = new Noise('IK', true)
-  const keypair = generateKeypair()
+  const keypair = generateKeyPair()
 
-  const sServer = {
-    secretKey: keypair.priv,
-    publicKey: keypair.pub
-  }
+  initiator.initialise(Buffer.alloc(0), keypair.publicKey)
 
-  initiator.initialise(Buffer.alloc(0), sServer.publicKey)
-
-  const server = ref.initialize('IK', false, Buffer.alloc(0), sServer)
+  const server = ref.initialize('IK', false, Buffer.alloc(0), keypair)
   const serverRx = Buffer.alloc(512)
   const serverTx = Buffer.alloc(512)
 
@@ -254,14 +207,9 @@ test('IK handshake with reference server', t => {
 
 test('IK handshake with reference client', t => {
   const responder = new Noise('IK', false)
-  const keypair = generateKeypair()
+  const keypair = generateKeyPair()
 
-  const sServer = {
-    secretKey: keypair.priv,
-    publicKey: keypair.pub
-  }
-
-  const client = ref.initialize('IK', true, Buffer.alloc(0), sServer, null, responder.s.pub)
+  const client = ref.initialize('IK', true, Buffer.alloc(0), keypair, null, responder.s.publicKey)
   const clientRx = Buffer.alloc(512)
   const clientTx = Buffer.alloc(512)
 
@@ -303,16 +251,11 @@ test('IK handshake with reference client', t => {
 
 test('XX handshake with reference server', t => {
   const initiator = new Noise('XX', true)
-  const keypair = generateKeypair()
-
-  const sServer = {
-    secretKey: keypair.priv,
-    publicKey: keypair.pub
-  }
+  const keypair = generateKeyPair()
 
   initiator.initialise(Buffer.alloc(0))
 
-  const server = ref.initialize('XX', false, Buffer.alloc(0), sServer)
+  const server = ref.initialize('XX', false, Buffer.alloc(0), keypair)
   const serverRx = Buffer.alloc(512)
   const serverTx = Buffer.alloc(512)
 
@@ -352,16 +295,11 @@ test('XX handshake with reference server', t => {
 
 test('XX handshake with reference client', t => {
   const responder = new Noise('XX', false)
-  const keypair = generateKeypair()
-
-  const sClient = {
-    secretKey: keypair.priv,
-    publicKey: keypair.pub
-  }
+  const keypair = generateKeyPair()
 
   responder.initialise(Buffer.alloc(0))
 
-  const client = ref.initialize('XX', true, Buffer.alloc(0), sClient)
+  const client = ref.initialize('XX', true, Buffer.alloc(0), keypair)
   const clientTx = Buffer.alloc(512)
   const clientRx = Buffer.alloc(512)
 

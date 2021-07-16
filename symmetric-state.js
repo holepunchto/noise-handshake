@@ -13,7 +13,7 @@ module.exports = class SymmetricState extends CipherState {
     this.chainingKey = null
     this.offset = 0
 
-    this.DH_ALG = this.curve.alg
+    this.DH_ALG = this.curve.ALG
   }
 
   mixHash (data) {
