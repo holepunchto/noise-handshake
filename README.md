@@ -2,7 +2,8 @@
 
 ## Usage
 ```js
-const Noise = require('basic-noise')
+const Noise = require('noise-handshake')
+const Cipher = require('noise-handshake/cipher')
 const initiator = new Noise('IK ', true)
 const responder = new Noise('IK', false)
 
@@ -22,10 +23,14 @@ initiator.recv(reply)
 
 console.log(initiator.handshakeComplete) // true
 
+// instantiate a cipher using shared secrets
+const send = new Cipher(initiator.rx)
+const recieve = new Cipher(initiator.tx)
+
 const msg = Buffer.from('hello, world')
 
-const enc = initiator.rx.encrypt(msg)
-console.log(responder.tx.decrypt(enc)) // hello, world
+const enc = send.encrypt(msg)
+console.log(recieve.decrypt(enc)) // hello, world
 ```
 
 ## API
@@ -62,14 +67,17 @@ Send the next message in the handshake, add an optional payload buffer to be inc
 
 Receive a handshake message from the peer and return the encrypted payload.
 
-#### `peer.handshakeComplete`
+#### `peer.complete`
 
 `true` or `false`. Indicates whether `rx` and `tx` have been created yet.
 
-#### `const ciphertext = peer.rx.encrypt(plaintext, [ad])`
+When complete, the working handshake state shall be cleared *only* the following state shall remain on the object:
 
-Encrypt a message to the remote peer with an optional authenticated data passed in as `ad`.
-
-#### `const plaintext = peer.tx.decrypt(ciphertext, [ad])`
-
-Decrypt a ciphertext from the remote peer. Note `initiator.rx` is decrypted by `responder.tx` and vice versa. If the message was encrypted with authenticated data, this must be passed in as `ad` otherwise decryption shall fail
+```js
+{
+  tx, // session key to decrypt messages from remote peer
+  rx, // session key to encrypt messages to remote peer
+  rs, // the remote peer's public key,
+  hash, // a hash of the entire handshake state
+}
+```

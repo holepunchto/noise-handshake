@@ -17,8 +17,8 @@ test('IK with payload', t => {
   message = responder.send(payload2)
   t.deepEqual(initiator.recv(message), payload2)
 
-  t.deepEqual(initiator.rx.key, responder.tx.key)
-  t.deepEqual(initiator.tx.key, responder.rx.key)
+  t.deepEqual(initiator.rx, responder.tx)
+  t.deepEqual(initiator.tx, responder.rx)
   t.end()
 })
 
@@ -42,7 +42,7 @@ test('XX with payload', t => {
   message = initiator.send(payload3)
   t.deepEqual(responder.recv(message), payload3)
 
-  t.deepEqual(initiator.rx.key, responder.tx.key)
-  t.deepEqual(initiator.tx.key, responder.rx.key)
+  t.deepEqual(initiator.rx, responder.tx)
+  t.deepEqual(initiator.tx, responder.rx)
   t.end()
 })

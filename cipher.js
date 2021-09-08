@@ -40,6 +40,12 @@ module.exports = class CipherState {
     return this.key !== null
   }
 
+  _clear () {
+    sodium.sodium_memzero(this.key)
+    this.key = null
+    this.nonce = null
+  }
+
   static get MACBYTES () {
     return 16
   }
