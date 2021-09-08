@@ -5,7 +5,7 @@ test('IK', t => {
   const initiator = new NoiseState('IK', true)
   const responder = new NoiseState('IK', false)
 
-  const rpk = new Uint8Array(responder.s.publicKey)
+  const rpk = Buffer.from(responder.s.publicKey)
   initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
   responder.initialise(Buffer.alloc(0))
 
@@ -38,15 +38,11 @@ test('XX', t => {
   initiator.initialise(Buffer.alloc(0))
   responder.initialise(Buffer.alloc(0))
 
-  while (!initiator.handshakeComplete) {
-    const message = initiator.send()
-    responder.recv(message)
+  const message = initiator.send()
+  responder.recv(message)
 
-    if (!responder.handshakeComplete) {
-      const reply = responder.send()
-      initiator.recv(reply)
-    }
-  }
+  const reply = responder.send()
+  initiator.recv(reply)
 
   t.deepEqual(initiator.rx, responder.tx)
   t.deepEqual(initiator.tx, responder.rx)

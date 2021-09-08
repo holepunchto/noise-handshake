@@ -89,11 +89,11 @@ module.exports = class NoiseState extends SymmetricState {
     ].join('_'))
 
     this.initiator = initiator
-    this.handshakeComplete = false
+    this.complete = false
 
     this.rx = null
     this.tx = null
-    this.handshakeHash = null
+    this.hash = null
   }
 
   initialise (prologue, remoteStatic) {
@@ -131,8 +131,8 @@ module.exports = class NoiseState extends SymmetricState {
     this.tx = this.initiator ? k1 : k2
     this.rx = this.initiator ? k2 : k1
 
-    this.handshakeComplete = true
-    this.handshakeHash = this.getHandshakeHash()
+    this.complete = true
+    this.hash = this.getHandshakeHash()
 
     this._clear()
   }

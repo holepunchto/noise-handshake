@@ -9,7 +9,7 @@ test('XX handshake against reference impl', t => {
   const initiator = new Noise('XX', true)
   const responder = new Noise('XX', false)
 
-  const handshakeHash = Buffer.alloc(64)
+  const hash = Buffer.alloc(64)
   const handshakeHashes = []
   const refHandshakeHashes = []
 
@@ -37,8 +37,8 @@ test('XX handshake against reference impl', t => {
   message = initiator.send()
   responder.recv(message)
 
-  handshakeHashes.push(initiator.handshakeHash)
-  handshakeHashes.push(responder.handshakeHash)
+  handshakeHashes.push(initiator.hash)
+  handshakeHashes.push(responder.hash)
 
   storeHash(client, refHandshakeHashes)
   storeHash(server, refHandshakeHashes)
@@ -82,8 +82,8 @@ test('XX handshake against reference impl', t => {
   t.end()
 
   function storeHash (state, arr) {
-    getHandshakeHash(state.symmetricState, handshakeHash)
-    arr.push(Buffer.from(handshakeHash))
+    getHandshakeHash(state.symmetricState, hash)
+    arr.push(Buffer.from(hash))
   }
 })
 
@@ -91,7 +91,7 @@ test('IK handshake against reference impl', t => {
   const initiator = new Noise('IK', true)
   const responder = new Noise('IK', false)
 
-  const handshakeHash = Buffer.alloc(64)
+  const hash = Buffer.alloc(64)
   const handshakeHashes = []
   const refHandshakeHashes = []
 
@@ -115,8 +115,8 @@ test('IK handshake against reference impl', t => {
   const reply = responder.send()
   initiator.recv(reply)
 
-  handshakeHashes.push(initiator.handshakeHash)
-  handshakeHashes.push(responder.handshakeHash)
+  handshakeHashes.push(initiator.hash)
+  handshakeHashes.push(responder.hash)
 
   const clientTx = Buffer.alloc(512)
   const serverRx = Buffer.alloc(512)
@@ -154,8 +154,8 @@ test('IK handshake against reference impl', t => {
   t.end()
 
   function storeHash (state, arr) {
-    getHandshakeHash(state.symmetricState, handshakeHash)
-    arr.push(Buffer.from(handshakeHash))
+    getHandshakeHash(state.symmetricState, hash)
+    arr.push(Buffer.from(hash))
   }
 })
 
@@ -185,7 +185,7 @@ test('IK handshake with reference server', t => {
   const check = initiator.recv(serverTx.subarray(0, ref.writeMessage.bytes))
 
   t.same(payload, check)
-  t.same(initiator.handshakeHash, getHash(server))
+  t.same(initiator.hash, getHash(server))
 
   t.deepEqual(initiator.rx, splitClient.rx.subarray(0, 32))
   t.deepEqual(initiator.tx, splitClient.tx.subarray(0, 32))
@@ -225,7 +225,7 @@ test('IK handshake with reference client', t => {
   splitServer = ref.readMessage(client, message, clientRx)
 
   t.same(payload, clientRx.subarray(0, ref.readMessage.bytes))
-  t.same(responder.handshakeHash, getHash(client))
+  t.same(responder.hash, getHash(client))
 
   t.deepEqual(responder.rx, splitServer.rx.subarray(0, 32))
   t.deepEqual(responder.tx, splitServer.tx.subarray(0, 32))
@@ -271,7 +271,7 @@ test('XX handshake with reference server', t => {
   splitClient = ref.readMessage(server, message, serverRx)
 
   t.same(payload, serverRx.subarray(0, ref.readMessage.bytes))
-  t.same(initiator.handshakeHash, getHash(server))
+  t.same(initiator.hash, getHash(server))
 
   t.deepEqual(initiator.rx, splitClient.tx.subarray(0, 32))
   t.deepEqual(initiator.tx, splitClient.rx.subarray(0, 32))
@@ -319,7 +319,7 @@ test('XX handshake with reference client', t => {
   check = responder.recv(clientTx.subarray(0, ref.writeMessage.bytes))
 
   t.same(payload, check)
-  t.same(responder.handshakeHash, getHash(client))
+  t.same(responder.hash, getHash(client))
 
   t.deepEqual(responder.rx, splitServer.tx.subarray(0, 32))
   t.deepEqual(responder.tx, splitServer.rx.subarray(0, 32))
@@ -369,7 +369,7 @@ test('Bugfix: prologue >64 bytes', t => {
   check = responder.recv(clientTx.subarray(0, ref.writeMessage.bytes))
 
   t.same(payload, check)
-  t.same(responder.handshakeHash, getHash(client))
+  t.same(responder.hash, getHash(client))
 
   t.deepEqual(responder.rx, splitServer.tx.subarray(0, 32))
   t.deepEqual(responder.tx, splitServer.rx.subarray(0, 32))
