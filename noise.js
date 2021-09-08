@@ -134,7 +134,9 @@ module.exports = class NoiseState extends SymmetricState {
     this.handshakeComplete = true
     this.handshakeHash = this.getHandshakeHash()
 
-    // this._clear()
+    this.remotePublicKey = new Uint8Array(this.rs)
+
+    this._clear()
   }
 
   recv (buf) {
@@ -211,19 +213,22 @@ module.exports = class NoiseState extends SymmetricState {
     }
 
     w.push(this.encryptAndHash(payload))
+    const response = w.end()
 
     if (!this.handshake.length) this.final()
-    return w.end()
+    return response
   }
 
   _clear () {
     super._clear()
 
     this.e.secretKey.fill(0)
+    this.e.publicKey.fill(0)
+
     this.re.fill(0)
     this.rs.fill(0)
 
-    this.e.secretKey = null
+    this.e = null
     this.re = null
     this.rs = null
   }
