@@ -40,6 +40,12 @@ module.exports = class CipherState {
     return this.key !== null
   }
 
+  _clear () {
+    this.key.fill(0)
+    this.key = null
+    this.nonce = null
+  }
+
   static get MACBYTES () {
     return 16
   }

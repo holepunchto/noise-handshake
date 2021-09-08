@@ -93,6 +93,7 @@ module.exports = class NoiseState extends SymmetricState {
 
     this.rx = null
     this.tx = null
+    this.handshakeHash = null
   }
 
   initialise (prologue, remoteStatic) {
@@ -125,12 +126,15 @@ module.exports = class NoiseState extends SymmetricState {
   }
 
   final () {
-    const { cipher1, cipher2 } = this.split()
+    const [k1, k2] = this.split()
 
-    this.tx = this.initiator ? cipher1 : cipher2
-    this.rx = this.initiator ? cipher2 : cipher1
+    this.tx = this.initiator ? k1 : k2
+    this.rx = this.initiator ? k2 : k1
 
     this.handshakeComplete = true
+    this.handshakeHash = this.getHandshakeHash()
+
+    // this._clear()
   }
 
   recv (buf) {
@@ -210,6 +214,18 @@ module.exports = class NoiseState extends SymmetricState {
 
     if (!this.handshake.length) this.final()
     return w.end()
+  }
+
+  _clear () {
+    super._clear()
+
+    this.e.secretKey.fill(0)
+    this.re.fill(0)
+    this.rs.fill(0)
+
+    this.e.secretKey = null
+    this.re = null
+    this.rs = null
   }
 }
 
