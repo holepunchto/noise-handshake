@@ -337,6 +337,50 @@ test('XX handshake with reference client', t => {
   }
 })
 
+test('Bugfix: prologue >64 bytes', t => {
+  const responder = new Noise('XX', false)
+  const keypair = generateKeyPair()
+
+  responder.initialise(Buffer.alloc(65, 1))
+
+  const client = ref.initialize('XX', true, Buffer.alloc(65, 1), keypair)
+  const clientTx = Buffer.alloc(512)
+  const clientRx = Buffer.alloc(512)
+
+  let splitServer
+
+  while (!responder.handshakeComplete) {
+    let payload = randomBytes(128)
+
+    splitServer = ref.writeMessage(client, payload, clientTx)
+    const check = responder.recv(clientTx.subarray(0, ref.writeMessage.bytes))
+
+    t.same(payload, check)
+    t.same(responder.getHandshakeHash(), getHash(client))
+
+    if (!splitServer) {
+      payload = randomBytes(128)
+
+      const message = responder.send(payload)
+      splitServer = ref.readMessage(client, message, clientRx)
+
+      t.same(payload, clientRx.subarray(0, ref.readMessage.bytes))
+      t.same(responder.getHandshakeHash(), getHash(client))
+    }
+  }
+
+  t.deepEqual(responder.rx.key, splitServer.tx.subarray(0, 32))
+  t.deepEqual(responder.tx.key, splitServer.rx.subarray(0, 32))
+
+  t.end()
+
+  function getHash (state) {
+    const ret = Buffer.alloc(64)
+    getHandshakeHash(state.symmetricState, ret)
+    return ret
+  }
+})
+
 function randomBytes (n) {
   const bytes = Buffer.alloc(Math.ceil(Math.random() * n))
   sodium.randombytes_buf(bytes)

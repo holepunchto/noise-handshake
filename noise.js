@@ -1,6 +1,7 @@
 const assert = require('nanoassert')
 
 const SymmetricState = require('./symmetric-state')
+const { HASHLEN } = require('./hkdf')
 
 const PRESHARE_IS = Symbol('initiator static key preshared')
 const PRESHARE_RS = Symbol('responder static key preshared')
@@ -95,7 +96,7 @@ module.exports = class NoiseState extends SymmetricState {
   }
 
   initialise (prologue, remoteStatic) {
-    if (prologue.byteLength <= 64) this.digest.set(this.protocol)
+    if (this.protocol.byteLength <= HASHLEN) this.digest.set(this.protocol)
     else this.mixHash(this.protocol)
 
     this.chainingKey = Buffer.from(this.digest)
