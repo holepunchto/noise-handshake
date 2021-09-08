@@ -41,7 +41,7 @@ module.exports = class CipherState {
   }
 
   _clear () {
-    this.key.fill(0)
+    sodium.sodium_memzero(this.key)
     this.key = null
     this.nonce = null
   }

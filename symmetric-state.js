@@ -55,8 +55,8 @@ module.exports = class SymmetricState extends CipherState {
   _clear () {
     super._clear()
 
-    this.digest.fill(0)
-    this.chainingKey.fill(0)
+    sodium.sodium_memzero(this.digest)
+    sodium.sodium_memzero(this.chainingKey)
 
     this.digest = null
     this.chainingKey = null
