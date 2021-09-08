@@ -134,8 +134,6 @@ module.exports = class NoiseState extends SymmetricState {
     this.handshakeComplete = true
     this.handshakeHash = this.getHandshakeHash()
 
-    this.remotePublicKey = new Uint8Array(this.rs)
-
     this._clear()
   }
 
@@ -226,11 +224,9 @@ module.exports = class NoiseState extends SymmetricState {
     this.e.publicKey.fill(0)
 
     this.re.fill(0)
-    this.rs.fill(0)
 
     this.e = null
     this.re = null
-    this.rs = null
   }
 }
 

@@ -77,7 +77,7 @@ When complete, the working handshake state shall be cleared *only* the following
 {
   tx, // session key to decrypt messages from remote peer
   rx, // session key to encrypt messages to remote peer
-  remotePublicKey, // the remote peers public key,
+  rs, // the remote peer's public key,
   handshakeHash, // a hash of the entire handshake state
 }
 ```

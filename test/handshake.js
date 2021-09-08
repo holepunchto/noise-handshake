@@ -23,9 +23,8 @@ test('IK', t => {
   t.equal(initiator.offset, null)
   t.equal(initiator.e, null)
   t.equal(initiator.re, null)
-  t.equal(initiator.rs, null)
 
-  t.same(initiator.remotePublicKey, rpk)
+  t.same(initiator.rs, rpk)
 
   t.deepEqual(initiator.rx, responder.tx)
   t.deepEqual(initiator.tx, responder.rx)
