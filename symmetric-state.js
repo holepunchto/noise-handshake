@@ -48,12 +48,21 @@ module.exports = class SymmetricState extends CipherState {
   }
 
   split () {
-    const [k1, k2] = hkdf(this.chainingKey, Buffer.alloc(0))
+    const res = hkdf(this.chainingKey, Buffer.alloc(0))
+    return res.map(k => k.subarray(0, 32))
+  }
 
-    return {
-      cipher1: new CipherState(k1.subarray(0, 32)),
-      cipher2: new CipherState(k2.subarray(0, 32))
-    }
+  _clear () {
+    super._clear()
+
+    this.digest.fill(0)
+    this.chainingKey.fill(0)
+
+    this.digest = null
+    this.chainingKey = null
+    this.offset = null
+
+    this.curve = null
   }
 
   static get alg () {

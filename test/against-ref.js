@@ -16,29 +16,29 @@ test('XX handshake against reference impl', t => {
   initiator.initialise(Buffer.alloc(0))
   responder.initialise(Buffer.alloc(0))
 
-  handshakeHashes.push(initiator.getHandshakeHash())
-  handshakeHashes.push(responder.getHandshakeHash())
+  const client = ref.initialize('XX', true, Buffer.alloc(0), initiator.s, initiator.e)
+  const server = ref.initialize('XX', false, Buffer.alloc(0), responder.s, responder.e)
+
+  handshakeHashes.push(initiator.handshakeHash)
+  handshakeHashes.push(responder.handshakeHash)
 
   let message = initiator.send()
   responder.recv(message)
 
-  handshakeHashes.push(initiator.getHandshakeHash())
-  handshakeHashes.push(responder.getHandshakeHash())
+  handshakeHashes.push(initiator.handshakeHash)
+  handshakeHashes.push(responder.handshakeHash)
 
   message = responder.send()
   initiator.recv(message)
 
-  handshakeHashes.push(initiator.getHandshakeHash())
-  handshakeHashes.push(responder.getHandshakeHash())
+  handshakeHashes.push(initiator.handshakeHash)
+  handshakeHashes.push(responder.handshakeHash)
 
   message = initiator.send()
   responder.recv(message)
 
-  handshakeHashes.push(initiator.getHandshakeHash())
-  handshakeHashes.push(responder.getHandshakeHash())
-
-  const client = ref.initialize('XX', true, Buffer.alloc(0), initiator.s, initiator.e)
-  const server = ref.initialize('XX', false, Buffer.alloc(0), responder.s, responder.e)
+  handshakeHashes.push(initiator.handshakeHash)
+  handshakeHashes.push(responder.handshakeHash)
 
   storeHash(client, refHandshakeHashes)
   storeHash(server, refHandshakeHashes)
@@ -70,10 +70,10 @@ test('XX handshake against reference impl', t => {
   storeHash(client, refHandshakeHashes)
   storeHash(server, refHandshakeHashes)
 
-  t.deepEqual(initiator.rx.key, splitClient.rx.subarray(0, 32))
-  t.deepEqual(initiator.tx.key, splitClient.tx.subarray(0, 32))
-  t.deepEqual(initiator.rx.key, splitServer.tx.subarray(0, 32))
-  t.deepEqual(initiator.tx.key, splitServer.rx.subarray(0, 32))
+  t.deepEqual(initiator.rx, splitClient.rx.subarray(0, 32))
+  t.deepEqual(initiator.tx, splitClient.tx.subarray(0, 32))
+  t.deepEqual(initiator.rx, splitServer.tx.subarray(0, 32))
+  t.deepEqual(initiator.tx, splitServer.rx.subarray(0, 32))
 
   while (handshakeHashes.length && refHandshakeHashes.length) {
     t.same(handshakeHashes.shift(), refHandshakeHashes.shift())
@@ -98,27 +98,27 @@ test('IK handshake against reference impl', t => {
   initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
   responder.initialise(Buffer.alloc(0))
 
-  handshakeHashes.push(initiator.getHandshakeHash())
-  handshakeHashes.push(responder.getHandshakeHash())
+  const client = ref.initialize('IK', true, Buffer.alloc(0), initiator.s, initiator.e, responder.s.publicKey)
+  const server = ref.initialize('IK', false, Buffer.alloc(0), responder.s, responder.e)
+
+  handshakeHashes.push(initiator.handshakeHash)
+  handshakeHashes.push(responder.handshakeHash)
 
   while (!initiator.handshakeComplete) {
     const message = initiator.send()
     responder.recv(message)
 
-    handshakeHashes.push(initiator.getHandshakeHash())
-    handshakeHashes.push(responder.getHandshakeHash())
+    handshakeHashes.push(initiator.handshakeHash)
+    handshakeHashes.push(responder.handshakeHash)
 
     if (!responder.handshakeComplete) {
       const reply = responder.send()
       initiator.recv(reply)
 
-      handshakeHashes.push(initiator.getHandshakeHash())
-      handshakeHashes.push(responder.getHandshakeHash())
+      handshakeHashes.push(initiator.handshakeHash)
+      handshakeHashes.push(responder.handshakeHash)
     }
   }
-
-  const client = ref.initialize('IK', true, Buffer.alloc(0), initiator.s, initiator.e, responder.s.publicKey)
-  const server = ref.initialize('IK', false, Buffer.alloc(0), responder.s, responder.e)
 
   const clientTx = Buffer.alloc(512)
   const serverRx = Buffer.alloc(512)
@@ -144,10 +144,10 @@ test('IK handshake against reference impl', t => {
   storeHash(client, refHandshakeHashes)
   storeHash(server, refHandshakeHashes)
 
-  t.deepEqual(initiator.rx.key, splitClient.rx.subarray(0, 32))
-  t.deepEqual(initiator.tx.key, splitClient.tx.subarray(0, 32))
-  t.deepEqual(initiator.rx.key, splitServer.tx.subarray(0, 32))
-  t.deepEqual(initiator.tx.key, splitServer.rx.subarray(0, 32))
+  t.deepEqual(initiator.rx, splitClient.rx.subarray(0, 32))
+  t.deepEqual(initiator.tx, splitClient.tx.subarray(0, 32))
+  t.deepEqual(initiator.rx, splitServer.tx.subarray(0, 32))
+  t.deepEqual(initiator.tx, splitServer.rx.subarray(0, 32))
 
   while (handshakeHashes.length && refHandshakeHashes.length) {
     t.same(handshakeHashes.shift(), refHandshakeHashes.shift())
@@ -180,7 +180,7 @@ test('IK handshake with reference server', t => {
     splitClient = ref.readMessage(server, message, serverRx)
 
     t.same(payload, serverRx.subarray(0, ref.readMessage.bytes))
-    t.same(initiator.getHandshakeHash(), getHash(server))
+    t.same(initiator.handshakeHash, getHash(server))
 
     if (!splitClient) {
       payload = randomBytes(128)
@@ -189,12 +189,12 @@ test('IK handshake with reference server', t => {
       const check = initiator.recv(serverTx.subarray(0, ref.writeMessage.bytes))
 
       t.same(payload, check)
-      t.same(initiator.getHandshakeHash(), getHash(server))
+      t.same(initiator.handshakeHash, getHash(server))
     }
   }
 
-  t.deepEqual(initiator.rx.key, splitClient.rx.subarray(0, 32))
-  t.deepEqual(initiator.tx.key, splitClient.tx.subarray(0, 32))
+  t.deepEqual(initiator.rx, splitClient.rx.subarray(0, 32))
+  t.deepEqual(initiator.tx, splitClient.tx.subarray(0, 32))
 
   t.end()
 
@@ -224,7 +224,7 @@ test('IK handshake with reference client', t => {
     const check = responder.recv(clientTx.subarray(0, ref.writeMessage.bytes))
 
     t.same(payload, check)
-    t.same(responder.getHandshakeHash(), getHash(client))
+    t.same(responder.handshakeHash, getHash(client))
 
     if (!splitServer) {
       payload = randomBytes(128)
@@ -233,12 +233,12 @@ test('IK handshake with reference client', t => {
       splitServer = ref.readMessage(client, message, clientRx)
 
       t.same(payload, clientRx.subarray(0, ref.readMessage.bytes))
-      t.same(responder.getHandshakeHash(), getHash(client))
+      t.same(responder.handshakeHash, getHash(client))
     }
   }
 
-  t.deepEqual(responder.rx.key, splitServer.rx.subarray(0, 32))
-  t.deepEqual(responder.tx.key, splitServer.tx.subarray(0, 32))
+  t.deepEqual(responder.rx, splitServer.rx.subarray(0, 32))
+  t.deepEqual(responder.tx, splitServer.tx.subarray(0, 32))
 
   t.end()
 
@@ -268,7 +268,7 @@ test('XX handshake with reference server', t => {
     splitClient = ref.readMessage(server, message, serverRx)
 
     t.same(payload, serverRx.subarray(0, ref.readMessage.bytes))
-    t.same(initiator.getHandshakeHash(), getHash(server))
+    t.same(initiator.handshakeHash, getHash(server))
 
     if (!splitClient) {
       payload = randomBytes(128)
@@ -277,12 +277,12 @@ test('XX handshake with reference server', t => {
       const check = initiator.recv(serverTx.subarray(0, ref.writeMessage.bytes))
 
       t.same(payload, check)
-      t.same(initiator.getHandshakeHash(), getHash(server))
+      t.same(initiator.handshakeHash, getHash(server))
     }
   }
 
-  t.deepEqual(initiator.rx.key, splitClient.tx.subarray(0, 32))
-  t.deepEqual(initiator.tx.key, splitClient.rx.subarray(0, 32))
+  t.deepEqual(initiator.rx, splitClient.tx.subarray(0, 32))
+  t.deepEqual(initiator.tx, splitClient.rx.subarray(0, 32))
 
   t.end()
 
@@ -312,7 +312,7 @@ test('XX handshake with reference client', t => {
     const check = responder.recv(clientTx.subarray(0, ref.writeMessage.bytes))
 
     t.same(payload, check)
-    t.same(responder.getHandshakeHash(), getHash(client))
+    t.same(responder.handshakeHash, getHash(client))
 
     if (!splitServer) {
       payload = randomBytes(128)
@@ -321,12 +321,12 @@ test('XX handshake with reference client', t => {
       splitServer = ref.readMessage(client, message, clientRx)
 
       t.same(payload, clientRx.subarray(0, ref.readMessage.bytes))
-      t.same(responder.getHandshakeHash(), getHash(client))
+      t.same(responder.handshakeHash, getHash(client))
     }
   }
 
-  t.deepEqual(responder.rx.key, splitServer.tx.subarray(0, 32))
-  t.deepEqual(responder.tx.key, splitServer.rx.subarray(0, 32))
+  t.deepEqual(responder.rx, splitServer.tx.subarray(0, 32))
+  t.deepEqual(responder.tx, splitServer.rx.subarray(0, 32))
 
   t.end()
 
