@@ -1,4 +1,5 @@
 const sodium = require('sodium-universal')
+const bint = require('bint8array')
 
 module.exports = class CipherState {
   constructor (key) {
@@ -18,7 +19,7 @@ module.exports = class CipherState {
 
   encrypt (plaintext, ad) {
     if (!this.hasKey) return plaintext
-    if (!ad) ad = Buffer.alloc(0)
+    if (!ad) ad = new Uint8Array(0)
 
     const ciphertext = encryptWithAD(this.key, this.nonce, ad, plaintext)
     this.nonce++
@@ -28,7 +29,7 @@ module.exports = class CipherState {
 
   decrypt (ciphertext, ad) {
     if (!this.hasKey) return ciphertext
-    if (!ad) ad = Buffer.alloc(0)
+    if (!ad) ad = new Uint8Array(0)
 
     const plaintext = decryptWithAD(this.key, this.nonce, ad, ciphertext)
     this.nonce++
@@ -61,13 +62,14 @@ module.exports = class CipherState {
 
 function encryptWithAD (key, counter, additionalData, plaintext) {
   // for our purposes, additionalData will always be a pubkey so we encode from hex
-  if (!(additionalData instanceof Uint8Array)) additionalData = Buffer.from(additionalData, 'hex')
-  if (!(plaintext instanceof Uint8Array)) plaintext = Buffer.from(plaintext, 'hex')
+  if (!(additionalData instanceof Uint8Array)) additionalData = bint.fromString(additionalData, 'hex')
+  if (!(plaintext instanceof Uint8Array)) plaintext = bint.fromString(plaintext, 'hex')
 
-  const nonce = Buffer.alloc(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
-  nonce.writeUInt32LE(counter, 4)
+  const nonce = new Uint8Array(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
+  const view = new DataView(nonce.buffer, nonce.byteOffset, nonce.byteLength)
+  view.setUint32(4, counter, true)
 
-  const ciphertext = Buffer.alloc(plaintext.byteLength + sodium.crypto_aead_chacha20poly1305_ietf_ABYTES)
+  const ciphertext = new Uint8Array(plaintext.byteLength + sodium.crypto_aead_chacha20poly1305_ietf_ABYTES)
 
   sodium.crypto_aead_chacha20poly1305_ietf_encrypt(ciphertext, plaintext, additionalData, null, nonce, key)
   return ciphertext
@@ -75,13 +77,14 @@ function encryptWithAD (key, counter, additionalData, plaintext) {
 
 function decryptWithAD (key, counter, additionalData, ciphertext) {
   // for our purposes, additionalData will always be a pubkey so we encode from hex
-  if (!(additionalData instanceof Uint8Array)) additionalData = Buffer.from(additionalData, 'hex')
-  if (!(ciphertext instanceof Uint8Array)) ciphertext = Buffer.from(ciphertext, 'hex')
+  if (!(additionalData instanceof Uint8Array)) additionalData = bint.fromString(additionalData, 'hex')
+  if (!(ciphertext instanceof Uint8Array)) ciphertext = bint.fromString(ciphertext, 'hex')
 
-  const nonce = Buffer.alloc(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
-  nonce.writeUInt32LE(counter, 4)
+  const nonce = new Uint8Array(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
+  const view = new DataView(nonce.buffer, nonce.byteOffset, nonce.byteLength)
+  view.setUint32(4, counter, true)
 
-  const plaintext = Buffer.alloc(ciphertext.byteLength - sodium.crypto_aead_chacha20poly1305_ietf_ABYTES)
+  const plaintext = new Uint8Array(ciphertext.byteLength - sodium.crypto_aead_chacha20poly1305_ietf_ABYTES)
 
   sodium.crypto_aead_chacha20poly1305_ietf_decrypt(plaintext, null, ciphertext, additionalData, nonce, key)
   return plaintext

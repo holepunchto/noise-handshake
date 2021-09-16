@@ -1,4 +1,5 @@
 const assert = require('nanoassert')
+const bint = require('bint8array')
 
 const SymmetricState = require('./symmetric-state')
 const { HASHLEN } = require('./hkdf')
@@ -80,7 +81,7 @@ module.exports = class NoiseState extends SymmetricState {
     this.pattern = pattern
     this.handshake = HANDSHAKES[this.pattern].slice()
 
-    this.protocol = Buffer.from([
+    this.protocol = bint.fromString([
       'Noise',
       this.pattern,
       this.DH_ALG,
@@ -100,7 +101,7 @@ module.exports = class NoiseState extends SymmetricState {
     if (this.protocol.byteLength <= HASHLEN) this.digest.set(this.protocol)
     else this.mixHash(this.protocol)
 
-    this.chainingKey = Buffer.from(this.digest)
+    this.chainingKey = new Uint8Array(this.digest)
 
     this.mixHash(prologue)
 
@@ -177,7 +178,7 @@ module.exports = class NoiseState extends SymmetricState {
     return payload
   }
 
-  send (payload = Buffer.alloc(0)) {
+  send (payload = new Uint8Array(0)) {
     const w = new Writer()
 
     for (const pattern of this.handshake.shift()) {

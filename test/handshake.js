@@ -1,13 +1,13 @@
 const test = require('tape')
 const NoiseState = require('../noise.js')
+// const curve = require('noise-curve-secp')
 
 test('IK', t => {
-  const initiator = new NoiseState('IK', true)
-  const responder = new NoiseState('IK', false)
+  const initiator = new NoiseState('IK', true, null)
+  const responder = new NoiseState('IK', false, null)
 
-  const rpk = Buffer.from(responder.s.publicKey)
-  initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
-  responder.initialise(Buffer.alloc(0))
+  initiator.initialise(new Uint8Array(0), responder.s.publicKey)
+  responder.initialise(new Uint8Array(0))
 
   const message = initiator.send()
   responder.recv(message)
@@ -24,7 +24,7 @@ test('IK', t => {
   t.equal(initiator.e, null)
   t.equal(initiator.re, null)
 
-  t.same(initiator.rs, rpk)
+  t.same(initiator.rs, responder.s.publicKey)
 
   t.deepEqual(initiator.rx, responder.tx)
   t.deepEqual(initiator.tx, responder.rx)
@@ -32,11 +32,11 @@ test('IK', t => {
 })
 
 test('XX', t => {
-  const initiator = new NoiseState('XX', true)
-  const responder = new NoiseState('XX', false)
+  const initiator = new NoiseState('XX', true, null)
+  const responder = new NoiseState('XX', false, null)
 
-  initiator.initialise(Buffer.alloc(0))
-  responder.initialise(Buffer.alloc(0))
+  initiator.initialise(new Uint8Array(0))
+  responder.initialise(new Uint8Array(0))
 
   const message = initiator.send()
   responder.recv(message)

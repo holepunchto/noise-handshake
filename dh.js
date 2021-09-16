@@ -24,8 +24,8 @@ module.exports = {
 function generateKeyPair (privKey) {
   const keyPair = {}
 
-  keyPair.secretKey = privKey || Buffer.alloc(SKLEN)
-  keyPair.publicKey = Buffer.alloc(PKLEN)
+  keyPair.secretKey = privKey || new Uint8Array(SKLEN)
+  keyPair.publicKey = new Uint8Array(PKLEN)
 
   if (privKey) {
     crypto_scalarmult_base(keyPair.publicKey, keyPair.secretKey)
@@ -40,8 +40,8 @@ function generateSeedKeyPair (seed) {
   assert(seed.byteLength === SKLEN)
 
   const keyPair = {}
-  keyPair.secretKey = Buffer.alloc(SKLEN)
-  keyPair.publicKey = Buffer.alloc(PKLEN)
+  keyPair.secretKey = new Uint8Array(SKLEN)
+  keyPair.publicKey = new Uint8Array(PKLEN)
 
   crypto_kx_seed_keypair(keyPair.publicKey, keyPair.secretKey, seed)
   return keyPair
@@ -51,7 +51,7 @@ function dh (pk, lsk) {
   assert(lsk.byteLength === SKLEN)
   assert(pk.byteLength === PKLEN)
 
-  const output = Buffer.alloc(DHLEN)
+  const output = new Uint8Array(DHLEN)
 
   crypto_scalarmult(
     output,
