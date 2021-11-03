@@ -1,6 +1,6 @@
 const assert = require('nanoassert')
 const hmacBlake2b = require('hmac-blake2b')
-const bint = require('bint8array')
+const b4a = require('b4a')
 
 const HASHLEN = 64
 
@@ -22,17 +22,17 @@ function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
   }
 
   function hkdfExpand (key, info, length) {
-    const T = [bint.fromString(info)]
+    const T = [b4a.from(info)]
     const lengthRatio = length / HASHLEN
 
     for (let i = 0; i < lengthRatio; i++) {
-      const infoBuf = bint.fromString(info)
-      const toHash = bint.concat([T[i], infoBuf, new Uint8Array([i + 1])])
+      const infoBuf = b4a.from(info)
+      const toHash = b4a.concat([T[i], infoBuf, b4a.from([i + 1])])
 
       T[i + 1] = hmacDigest(key, toHash)
     }
 
-    const result = bint.concat(T.slice(1))
+    const result = b4a.concat(T.slice(1))
     assert(result.byteLength === length, 'key expansion failed, length not as expected')
 
     return result
@@ -40,7 +40,7 @@ function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
 }
 
 function hmacDigest (key, input) {
-  const hmac = new Uint8Array(HASHLEN)
+  const hmac = b4a.alloc(HASHLEN)
   hmacBlake2b(hmac, input, key)
 
   return hmac

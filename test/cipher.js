@@ -7,7 +7,6 @@ const {
 const { randombytes_buf } = require('sodium-universal/randombytes')
 const Cipher = require('../cipher')
 const test = require('tape')
-const bint = require('bint8array')
 
 test('constants', function (assert) {
   assert.ok(Cipher.KEYBYTES === 32, 'KEYBYTES conforms to Noise Protocol')
@@ -22,18 +21,18 @@ test('constants', function (assert) {
 })
 
 test('identity', function (assert) {
-  const key = new Uint8Array(Cipher.KEYBYTES)
+  const key = Buffer.alloc(Cipher.KEYBYTES)
   randombytes_buf(key)
 
-  const key2 = new Uint8Array(Cipher.KEYBYTES)
+  const key2 = Buffer.alloc(Cipher.KEYBYTES)
   randombytes_buf(key2)
 
-  const plaintext = bint.fromString('Hello world')
+  const plaintext = Buffer.from('Hello world')
 
   const cipher = new Cipher(key)
   const ciphertext = cipher.encrypt(plaintext)
 
-  assert.throws(_ => cipher.decrypt(ciphertext, new Uint8Array(1)))
+  assert.throws(_ => cipher.decrypt(ciphertext, Buffer.alloc(1)))
   for (let i = 0; i < ciphertext.length; i++) {
     ciphertext[i] ^= i + 1
     assert.throws(_ => cipher.decrypt(ciphertext))
@@ -48,22 +47,22 @@ test('identity', function (assert) {
 })
 
 test('identity with ad', function (assert) {
-  const key = new Uint8Array(Cipher.KEYBYTES)
+  const key = Buffer.alloc(Cipher.KEYBYTES)
   randombytes_buf(key)
 
   const cipher = new Cipher(key)
 
   const ad = Buffer.from('version 0')
 
-  const key2 = new Uint8Array(Cipher.KEYBYTES)
+  const key2 = Buffer.alloc(Cipher.KEYBYTES)
   randombytes_buf(key2)
 
   const cipher2 = new Cipher(key2)
 
-  const plaintext = bint.fromString('Hello world')
+  const plaintext = Buffer.from('Hello world')
   const ciphertext = cipher.encrypt(plaintext, ad)
 
-  assert.throws(_ => cipher.decrypt(ciphertext, new Uint8Array(1)), 'should not have ad')
+  assert.throws(_ => cipher.decrypt(ciphertext, Buffer.alloc(1)), 'should not have ad')
   assert.throws(_ => cipher2.decrypt(ciphertext, ad), 'wrong key')
 
   cipher2.key = key
@@ -84,18 +83,18 @@ test('identity with ad', function (assert) {
 })
 
 // test.skip('rekey', function (assert) {
-//   const key = new Uint8Array(Cipher.KEYBYTES)
-//   const nonce = new Uint8Array(Cipher.NONCEBYTES)
+//   const key = Buffer.alloc(Cipher.KEYBYTES)
+//   const nonce = Buffer.alloc(Cipher.NONCEBYTES)
 //   randombytes_buf(key)
 //   randombytes_buf(nonce)
 
 //   const keyCopy = Buffer.from(key)
 //   cipher.rekey(key, key)
-//   assert.notOk(key.equals(keyCopy))
+//   assert.notOk(Buffer.equals(key, keyCopy))
 
 //   const plaintext = Buffer.from('Hello world')
-//   const ciphertext = new Uint8Array(plaintext.byteLength + Cipher.MACBYTES)
-//   const decrypted = new Uint8Array(plaintext.byteLength)
+//   const ciphertext = Buffer.alloc(plaintext.byteLength + Cipher.MACBYTES)
+//   const decrypted = Buffer.alloc(plaintext.byteLength)
 
 //   cipher.encrypt(ciphertext, key, nonce, null, plaintext)
 
@@ -104,6 +103,6 @@ test('identity with ad', function (assert) {
 //   cipher.rekey(keyCopy, keyCopy)
 //   cipher.decrypt(decrypted, keyCopy, nonce, null, ciphertext)
 
-//   assert.ok(decrypted.equals(plaintext))
+//   assert.ok(Buffer.equals(decrypted, plaintext))
 //   assert.end()
 // })

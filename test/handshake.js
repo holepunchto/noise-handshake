@@ -6,8 +6,8 @@ test('IK', t => {
   const initiator = new NoiseState('IK', true, null)
   const responder = new NoiseState('IK', false, null)
 
-  initiator.initialise(new Uint8Array(0), responder.s.publicKey)
-  responder.initialise(new Uint8Array(0))
+  initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
+  responder.initialise(Buffer.alloc(0))
 
   const message = initiator.send()
   responder.recv(message)
@@ -35,8 +35,8 @@ test('XX', t => {
   const initiator = new NoiseState('XX', true, null)
   const responder = new NoiseState('XX', false, null)
 
-  initiator.initialise(new Uint8Array(0))
-  responder.initialise(new Uint8Array(0))
+  initiator.initialise(Buffer.alloc(0))
+  responder.initialise(Buffer.alloc(0))
 
   const message = initiator.send()
   responder.recv(message)
