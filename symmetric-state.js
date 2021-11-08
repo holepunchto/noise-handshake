@@ -1,6 +1,6 @@
 const sodium = require('sodium-universal')
 const assert = require('nanoassert')
-const bint = require('bint8array')
+const b4a = require('b4a')
 const CipherState = require('./cipher')
 const curve = require('./dh')
 const { HASHLEN, hkdf } = require('./hkdf')
@@ -10,7 +10,7 @@ module.exports = class SymmetricState extends CipherState {
     super()
 
     this.curve = opts.curve || curve
-    this.digest = new Uint8Array(HASHLEN)
+    this.digest = b4a.alloc(HASHLEN)
     this.chainingKey = null
     this.offset = 0
 
@@ -41,7 +41,7 @@ module.exports = class SymmetricState extends CipherState {
   }
 
   getHandshakeHash (out) {
-    if (!out) return this.getHandshakeHash(new Uint8Array(HASHLEN))
+    if (!out) return this.getHandshakeHash(b4a.alloc(HASHLEN))
     assert(out.byteLength === HASHLEN, `output must be ${HASHLEN} bytes`)
 
     out.set(this.digest)
@@ -49,7 +49,7 @@ module.exports = class SymmetricState extends CipherState {
   }
 
   split () {
-    const res = hkdf(this.chainingKey, new Uint8Array(0))
+    const res = hkdf(this.chainingKey, b4a.alloc(0))
     return res.map(k => k.subarray(0, 32))
   }
 
@@ -72,6 +72,6 @@ module.exports = class SymmetricState extends CipherState {
 }
 
 function accumulateDigest (digest, input) {
-  const toHash = bint.concat([digest, input])
+  const toHash = b4a.concat([digest, input])
   sodium.crypto_generichash(digest, toHash)
 }
