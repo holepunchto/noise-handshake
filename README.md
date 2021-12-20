@@ -4,13 +4,13 @@
 ```js
 const Noise = require('noise-handshake')
 const Cipher = require('noise-handshake/cipher')
-const initiator = new Noise('IK ', true)
+const initiator = new Noise('IK', true)
 const responder = new Noise('IK', false)
 
 const prologue = Buffer.alloc(0)
 
 // preshared key
-initiator.initialise(prologue, responder.s.pub)
+initiator.initialise(prologue, responder.s.publicKey)
 responder.initialise(prologue)
 
 // -> e, es, s, ss
@@ -21,11 +21,11 @@ responder.recv(message)
 const reply = responder.send()
 initiator.recv(reply)
 
-console.log(initiator.handshakeComplete) // true
+console.log(initiator.complete) // true
 
 // instantiate a cipher using shared secrets
 const send = new Cipher(initiator.rx)
-const recieve = new Cipher(initiator.tx)
+const recieve = new Cipher(responder.tx)
 
 const msg = Buffer.from('hello, world')
 
