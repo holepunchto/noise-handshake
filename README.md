@@ -23,6 +23,12 @@ initiator.recv(reply)
 
 console.log(initiator.complete) // true
 
+// convention is to use rx for
+// sending and tx for receiving
+
+// initiator.rx === responder.tx
+// responder.rx === initiator.tx
+
 // instantiate a cipher using shared secrets
 const send = new Cipher(initiator.rx)
 const recieve = new Cipher(responder.tx)
