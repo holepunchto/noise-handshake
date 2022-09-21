@@ -48,16 +48,16 @@ function generateSeedKeyPair (seed) {
   return keyPair
 }
 
-function dh (pk, lsk) {
-  assert(lsk.byteLength === SKLEN)
-  assert(pk.byteLength === PKLEN)
+function dh (publicKey, { secretKey }) {
+  assert(secretKey.byteLength === SKLEN)
+  assert(publicKey.byteLength === PKLEN)
 
   const output = b4a.alloc(DHLEN)
 
   crypto_scalarmult(
     output,
-    lsk,
-    pk
+    secretKey,
+    publicKey
   )
 
   return output

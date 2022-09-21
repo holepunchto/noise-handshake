@@ -160,7 +160,7 @@ module.exports = class NoiseState extends SymmetricState {
         case TOK_SS : {
           const useStatic = keyPattern(pattern, this.initiator)
 
-          const localKey = useStatic.local ? this.s.secretKey : this.e.secretKey
+          const localKey = useStatic.local ? this.s : this.e
           const remoteKey = useStatic.remote ? this.rs : this.re
 
           this.mixKey(remoteKey, localKey)
@@ -199,7 +199,7 @@ module.exports = class NoiseState extends SymmetricState {
         case TOK_SS : {
           const useStatic = keyPattern(pattern, this.initiator)
 
-          const localKey = useStatic.local ? this.s.secretKey : this.e.secretKey
+          const localKey = useStatic.local ? this.s : this.e
           const remoteKey = useStatic.remote ? this.rs : this.re
 
           this.mixKey(remoteKey, localKey)
