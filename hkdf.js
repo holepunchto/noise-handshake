@@ -1,5 +1,5 @@
+const hmacBlake2b = require('./hmac')
 const assert = require('nanoassert')
-const hmacBlake2b = require('hmac-blake2b')
 const b4a = require('b4a')
 
 const HASHLEN = 64
