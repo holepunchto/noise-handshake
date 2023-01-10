@@ -15,7 +15,7 @@
   "dependencies": {
     "b4a": "^1.1.0",
     "nanoassert": "^2.0.0",
-    "sodium-universal": "^3.0.4"
+    "sodium-universal": "^4.0.0"
   },
   "devDependencies": {
     "noise-protocol": "chm-diederichs/noise-protocol.git#xx-ephemeral-key",
