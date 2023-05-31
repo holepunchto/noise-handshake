@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 const {
+  randombytes_buf,
   crypto_aead_chacha20poly1305_ietf_KEYBYTES,
   crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
   crypto_aead_chacha20poly1305_ietf_ABYTES
-} = require('sodium-universal/crypto_aead')
-const { randombytes_buf } = require('sodium-universal/randombytes')
+} = require('sodium-universal')
 const Cipher = require('../cipher')
 const test = require('tape')
 

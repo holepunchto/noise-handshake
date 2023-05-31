@@ -1,7 +1,6 @@
 /* eslint-disable camelcase */
 const b4a = require('b4a')
-const { sodium_memzero } = require('sodium-universal/memory')
-const { crypto_generichash, crypto_generichash_batch } = require('sodium-universal/crypto_generichash')
+const { sodium_memzero, crypto_generichash, crypto_generichash_batch } = require('sodium-universal')
 
 const HASHLEN = 64
 const BLOCKLEN = 128

@@ -1,6 +1,13 @@
 /* eslint-disable camelcase */
-const { crypto_kx_SEEDBYTES, crypto_kx_keypair, crypto_kx_seed_keypair } = require('sodium-universal/crypto_kx')
-const { crypto_scalarmult_BYTES, crypto_scalarmult_SCALARBYTES, crypto_scalarmult, crypto_scalarmult_base } = require('sodium-universal/crypto_scalarmult')
+const {
+  crypto_kx_SEEDBYTES,
+  crypto_kx_keypair,
+  crypto_kx_seed_keypair,
+  crypto_scalarmult_BYTES,
+  crypto_scalarmult_SCALARBYTES,
+  crypto_scalarmult,
+  crypto_scalarmult_base
+} = require('sodium-universal')
 
 const assert = require('nanoassert')
 const b4a = require('b4a')
