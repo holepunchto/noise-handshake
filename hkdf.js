@@ -13,9 +13,13 @@ function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
   const pseudoRandomKey = hkdfExtract(salt, inputKeyMaterial)
   const result = hkdfExpand(pseudoRandomKey, info, length)
 
-  const [k1, k2] = [result.slice(0, HASHLEN), result.slice(HASHLEN)]
-
-  return [k1, k2]
+  const results = []
+  let offset = 0
+  while (offset < result.length) {
+    results.push(result.subarray(offset, offset + HASHLEN))
+    offset += HASHLEN
+  }
+  return results
 
   function hkdfExtract (salt, inputKeyMaterial) {
     return hmacDigest(salt, inputKeyMaterial)
