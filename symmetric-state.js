@@ -21,6 +21,19 @@ module.exports = class SymmetricState extends CipherState {
     accumulateDigest(this.digest, data)
   }
 
+  mixKeyAndHash (key) {
+    const [ck, tempH, tempK] = hkdf(this.chainingKey, key, '', 3 * HASHLEN)
+    this.chainingKey = ck
+    this.mixHash(tempH)
+    this.initialiseKey(tempK.subarray(0, 32))
+  }
+
+  mixKeyNormal (key) {
+    const [ck, tempK] = hkdf(this.chainingKey, key)
+    this.chainingKey = ck
+    this.initialiseKey(tempK.subarray(0, 32))
+  }
+
   mixKey (remoteKey, localKey) {
     const dh = this.curve.dh(remoteKey, localKey)
     const hkdfResult = hkdf(this.chainingKey, dh)
