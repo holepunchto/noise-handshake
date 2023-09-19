@@ -9,6 +9,9 @@ module.exports = {
   HASHLEN
 }
 
+// HMAC-based Extract-and-Expand KDF
+// https://www.ietf.org/rfc/rfc5869.txt
+
 function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
   const pseudoRandomKey = hkdfExtract(salt, inputKeyMaterial)
   const result = hkdfExpand(pseudoRandomKey, info, length)

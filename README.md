@@ -30,8 +30,8 @@ console.log(initiator.complete) // true
 // responder.rx === initiator.tx
 
 // instantiate a cipher using shared secrets
-const send = new Cipher(initiator.rx)
-const recieve = new Cipher(responder.tx)
+const send = new Cipher(initiator.tx)
+const recieve = new Cipher(responder.rx)
 
 const msg = Buffer.from('hello, world')
 
