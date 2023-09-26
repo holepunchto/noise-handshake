@@ -44,6 +44,15 @@ test('XX', t => {
   const reply = responder.send()
   initiator.recv(reply)
 
+  const initiatorReply = initiator.send()
+  responder.recv(initiatorReply)
+
+  t.equal(initiator.complete, true)
+  t.equal(responder.complete, true)
+
+  t.not(initiator.rx, null)
+  t.not(initiator.tx, null)
+
   t.deepEqual(initiator.rx, responder.tx)
   t.deepEqual(initiator.tx, responder.rx)
   t.end()
