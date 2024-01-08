@@ -31,6 +31,11 @@ const HANDSHAKES = Object.freeze({
     [TOK_E, TOK_EE, TOK_S, TOK_ES],
     [TOK_S, TOK_SE]
   ],
+  XXpsk0: [
+    [TOK_PSK, TOK_E],
+    [TOK_E, TOK_EE, TOK_S, TOK_ES],
+    [TOK_S, TOK_SE]
+  ],
   IK: [
     PRESHARE_RS,
     [TOK_E, TOK_ES, TOK_S, TOK_SS],
