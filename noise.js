@@ -115,12 +115,6 @@ module.exports = class NoiseState extends SymmetricState {
     this.rx = null
     this.tx = null
     this.hash = null
-
-    function hasPskToken (handshake) {
-      return handshake.reduce((xs, x) => {
-        return (Array.isArray(x) && x.indexOf(TOK_PSK) !== -1) || xs
-      }, false)
-    }
   }
 
   initialise (prologue, remoteStatic) {
@@ -292,4 +286,10 @@ function keyPattern (pattern, initiator) {
       ret.remote ^= 1
       return ret
   }
+}
+
+function hasPskToken (handshake) {
+  return handshake.some(x => {
+    return Array.isArray(x) && x.indexOf(TOK_PSK) !== -1
+  })
 }
