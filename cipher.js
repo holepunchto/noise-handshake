@@ -22,6 +22,7 @@ module.exports = class CipherState {
     if (!ad) ad = b4a.alloc(0)
 
     const ciphertext = encryptWithAD(this.key, this.nonce, ad, plaintext)
+    if (ciphertext.length > 65535) throw new Error(`ciphertext length of ${ciphertext.length} exceeds maximum Noise message length of 65535`)
     this.nonce++
 
     return ciphertext
@@ -30,6 +31,7 @@ module.exports = class CipherState {
   decrypt (ciphertext, ad) {
     if (!this.hasKey) return ciphertext
     if (!ad) ad = b4a.alloc(0)
+    if (ciphertext.length > 65535) throw new Error(`ciphertext length of ${ciphertext.length} exceeds maximum Noise message length of 65535`)
 
     const plaintext = decryptWithAD(this.key, this.nonce, ad, ciphertext)
     this.nonce++
