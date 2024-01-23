@@ -82,6 +82,39 @@ test('identity with ad', function (assert) {
   assert.end()
 })
 
+test('max encrypt length', function (assert) {
+  assert.plan(2)
+
+  const key = Buffer.alloc(Cipher.KEYBYTES)
+  randombytes_buf(key)
+  const cipher = new Cipher(key)
+
+  const plaintext = Buffer.alloc(90_000).fill(0x08)
+
+  try {
+    cipher.encrypt(plaintext)
+  } catch (err) {
+    assert.ok(err instanceof Error)
+    assert.equals(err.message, 'ciphertext length of 90016 exceeds maximum Noise message length of 65535')
+  }
+})
+
+test('max decrypt length', function (assert) {
+  assert.plan(2)
+
+  const key = Buffer.alloc(Cipher.KEYBYTES)
+  randombytes_buf(key)
+  const cipher = new Cipher(key)
+
+  const ciphertext = Buffer.alloc(100_000).fill(0xBABECAFE)
+  try {
+    cipher.decrypt(ciphertext)
+  } catch (err) {
+    assert.ok(err instanceof Error)
+    assert.equals(err.message, 'ciphertext length of 100000 exceeds maximum Noise message length of 65535')
+  }
+})
+
 // test.skip('rekey', function (assert) {
 //   const key = Buffer.alloc(Cipher.KEYBYTES)
 //   const nonce = Buffer.alloc(Cipher.NONCEBYTES)
