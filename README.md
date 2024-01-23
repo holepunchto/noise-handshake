@@ -30,8 +30,8 @@ console.log(initiator.complete) // true
 // responder.rx === initiator.tx
 
 // instantiate a cipher using shared secrets
-const send = new Cipher(initiator.rx)
-const recieve = new Cipher(responder.tx)
+const send = new Cipher(initiator.tx)
+const recieve = new Cipher(responder.rx)
 
 const msg = Buffer.from('hello, world')
 
@@ -45,7 +45,9 @@ console.log(recieve.decrypt(enc)) // hello, world
 
 Create a new handshake state for a given pattern. Initiator should be either `true` or `false` depending on the role. A preexisting keypair may be passed as `staticKeypair`
 
-`opts` is may be used to pass in a `curve` module for performing Noise over other curves.
+`opts` may be used to pass in the following:
+- `curve`: module for performing Noise over other curves.
+- `psk`: a 32-byte buffer containing a pre-shared key for patterns containing `psk0`. (Other psk positions are not currently supported.)
 
 Curve modules should export the following:
 ```

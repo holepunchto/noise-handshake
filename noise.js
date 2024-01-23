@@ -7,6 +7,8 @@ const { HASHLEN } = require('./hkdf')
 const PRESHARE_IS = Symbol('initiator static key preshared')
 const PRESHARE_RS = Symbol('responder static key preshared')
 
+const TOK_PSK = Symbol('psk')
+
 const TOK_S = Symbol('s')
 const TOK_E = Symbol('e')
 
@@ -16,8 +18,21 @@ const TOK_EE = Symbol('ee')
 const TOK_SS = Symbol('ss')
 
 const HANDSHAKES = Object.freeze({
+  NN: [
+    [TOK_E],
+    [TOK_E, TOK_EE]
+  ],
+  NNpsk0: [
+    [TOK_PSK, TOK_E],
+    [TOK_E, TOK_EE]
+  ],
   XX: [
     [TOK_E],
+    [TOK_E, TOK_EE, TOK_S, TOK_ES],
+    [TOK_S, TOK_SE]
+  ],
+  XXpsk0: [
+    [TOK_PSK, TOK_E],
     [TOK_E, TOK_EE, TOK_S, TOK_ES],
     [TOK_S, TOK_SE]
   ],
@@ -75,11 +90,16 @@ module.exports = class NoiseState extends SymmetricState {
     this.s = staticKeypair || this.curve.generateKeyPair()
     this.e = null
 
+    this.psk = null
+    if (opts && opts.psk) this.psk = opts.psk
+
     this.re = null
     this.rs = null
 
     this.pattern = pattern
     this.handshake = HANDSHAKES[this.pattern].slice()
+
+    this.isPskHandshake = !!this.psk && hasPskToken(this.handshake)
 
     this.protocol = b4a.from([
       'Noise',
@@ -143,9 +163,14 @@ module.exports = class NoiseState extends SymmetricState {
 
     for (const pattern of this.handshake.shift()) {
       switch (pattern) {
+        case TOK_PSK :
+          this.mixKeyAndHash(this.psk)
+          break
+
         case TOK_E :
           this.re = r.shift(this.curve.PKLEN)
           this.mixHash(this.re)
+          if (this.isPskHandshake) this.mixKeyNormal(this.re)
           break
 
         case TOK_S : {
@@ -183,9 +208,14 @@ module.exports = class NoiseState extends SymmetricState {
 
     for (const pattern of this.handshake.shift()) {
       switch (pattern) {
+        case TOK_PSK :
+          this.mixKeyAndHash(this.psk)
+          break
+
         case TOK_E :
           if (this.e === null) this.e = this.curve.generateKeyPair()
           this.mixHash(this.e.publicKey)
+          if (this.isPskHandshake) this.mixKeyNormal(this.e.publicKey)
           w.push(this.e.publicKey)
           break
 
@@ -256,4 +286,10 @@ function keyPattern (pattern, initiator) {
       ret.remote ^= 1
       return ret
   }
+}
+
+function hasPskToken (handshake) {
+  return handshake.some(x => {
+    return Array.isArray(x) && x.indexOf(TOK_PSK) !== -1
+  })
 }
