@@ -4,7 +4,7 @@
   "description": "",
   "main": "noise.js",
   "scripts": {
-    "test": "standard && tape test/*.js"
+    "test": "standard && brittle test/*.js"
   },
   "author": "",
   "license": "ISC",
@@ -14,12 +14,12 @@
   },
   "dependencies": {
     "b4a": "^1.1.0",
+    "brittle": "^3.3.2",
     "nanoassert": "^2.0.0",
     "sodium-universal": "^4.0.0"
   },
   "devDependencies": {
     "noise-protocol": "chm-diederichs/noise-protocol.git#xx-ephemeral-key",
-    "standard": "^16.0.3",
-    "tape": "^5.2.2"
+    "standard": "^16.0.3"
   }
 }

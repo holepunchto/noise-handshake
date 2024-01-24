@@ -6,7 +6,7 @@ const {
   crypto_aead_chacha20poly1305_ietf_ABYTES
 } = require('sodium-universal')
 const Cipher = require('../cipher')
-const test = require('tape')
+const { test } = require('brittle')
 
 test('constants', function (assert) {
   assert.ok(Cipher.KEYBYTES === 32, 'KEYBYTES conforms to Noise Protocol')
@@ -32,17 +32,17 @@ test('identity', function (assert) {
   const cipher = new Cipher(key)
   const ciphertext = cipher.encrypt(plaintext)
 
-  assert.throws(_ => cipher.decrypt(ciphertext, Buffer.alloc(1)))
+  assert.exception(_ => cipher.decrypt(ciphertext, Buffer.alloc(1)))
   for (let i = 0; i < ciphertext.length; i++) {
     ciphertext[i] ^= i + 1
-    assert.throws(_ => cipher.decrypt(ciphertext))
+    assert.exception(_ => cipher.decrypt(ciphertext))
     ciphertext[i] ^= i + 1
   }
 
   cipher.initialiseKey(key)
   const decrypted = cipher.decrypt(ciphertext)
 
-  assert.same(decrypted, plaintext)
+  assert.alike(decrypted, plaintext)
   assert.end()
 })
 
@@ -62,23 +62,23 @@ test('identity with ad', function (assert) {
   const plaintext = Buffer.from('Hello world')
   const ciphertext = cipher.encrypt(plaintext, ad)
 
-  assert.throws(_ => cipher.decrypt(ciphertext, Buffer.alloc(1)), 'should not have ad')
-  assert.throws(_ => cipher2.decrypt(ciphertext, ad), 'wrong key')
+  assert.exception(_ => cipher.decrypt(ciphertext, Buffer.alloc(1)), 'should not have ad')
+  assert.exception(_ => cipher2.decrypt(ciphertext, ad), 'wrong key')
 
   cipher2.key = key
   cipher2.nonce = 2
-  assert.throws(_ => cipher2.decrypt(ciphertext, ad), 'wrong nonce')
+  assert.exception(_ => cipher2.decrypt(ciphertext, ad), 'wrong nonce')
 
   for (let i = 0; i < ciphertext.length; i++) {
     ciphertext[i] ^= 255
-    assert.throws(_ => cipher.decrypt(ciphertext, ad))
+    assert.exception(_ => cipher.decrypt(ciphertext, ad))
     ciphertext[i] ^= 255
   }
 
   cipher.initialiseKey(key)
   const decrypted = cipher.decrypt(ciphertext, ad)
 
-  assert.same(decrypted, plaintext)
+  assert.alike(decrypted, plaintext)
   assert.end()
 })
 
@@ -95,7 +95,7 @@ test('max encrypt length', function (assert) {
     cipher.encrypt(plaintext)
   } catch (err) {
     assert.ok(err instanceof Error)
-    assert.equals(err.message, 'ciphertext length of 90016 exceeds maximum Noise message length of 65535')
+    assert.alike(err.message, 'ciphertext length of 90016 exceeds maximum Noise message length of 65535')
   }
 })
 
@@ -111,7 +111,7 @@ test('max decrypt length', function (assert) {
     cipher.decrypt(ciphertext)
   } catch (err) {
     assert.ok(err instanceof Error)
-    assert.equals(err.message, 'ciphertext length of 100000 exceeds maximum Noise message length of 65535')
+    assert.alike(err.message, 'ciphertext length of 100000 exceeds maximum Noise message length of 65535')
   }
 })
 
@@ -123,7 +123,7 @@ test('max decrypt length', function (assert) {
 
 //   const keyCopy = Buffer.from(key)
 //   cipher.rekey(key, key)
-//   assert.notOk(Buffer.equals(key, keyCopy))
+//   assert.absent(Buffer.equals(key, keyCopy))
 
 //   const plaintext = Buffer.from('Hello world')
 //   const ciphertext = Buffer.alloc(plaintext.byteLength + Cipher.MACBYTES)
@@ -131,7 +131,7 @@ test('max decrypt length', function (assert) {
 
 //   cipher.encrypt(ciphertext, key, nonce, null, plaintext)
 
-//   assert.throws(_ => cipher.decrypt(ciphertext, null), 'wrong key')
+//   assert.exception(_ => cipher.decrypt(ciphertext, null), 'wrong key')
 
 //   cipher.rekey(keyCopy, keyCopy)
 //   cipher.decrypt(decrypted, keyCopy, nonce, null, ciphertext)

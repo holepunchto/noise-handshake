@@ -1,4 +1,4 @@
-const test = require('tape')
+const { test } = require('brittle')
 const NoiseState = require('../noise.js')
 // const curve = require('noise-curve-secp')
 
@@ -15,19 +15,19 @@ test('IK', t => {
   const reply = responder.send()
   initiator.recv(reply)
 
-  t.equal(initiator.key, null)
-  t.equal(initiator.nonce, null)
-  t.equal(initiator.curve, null)
-  t.equal(initiator.digest, null)
-  t.equal(initiator.chainingKey, null)
-  t.equal(initiator.offset, null)
-  t.equal(initiator.e, null)
-  t.equal(initiator.re, null)
+  t.alike(initiator.key, null)
+  t.alike(initiator.nonce, null)
+  t.alike(initiator.curve, null)
+  t.alike(initiator.digest, null)
+  t.alike(initiator.chainingKey, null)
+  t.alike(initiator.offset, null)
+  t.alike(initiator.e, null)
+  t.alike(initiator.re, null)
 
-  t.same(initiator.rs, responder.s.publicKey)
+  t.alike(initiator.rs, responder.s.publicKey)
 
-  t.deepEqual(initiator.rx, responder.tx)
-  t.deepEqual(initiator.tx, responder.rx)
+  t.alike(initiator.rx, responder.tx)
+  t.alike(initiator.tx, responder.rx)
   t.end()
 })
 
@@ -47,14 +47,14 @@ test('XX', t => {
   const initiatorReply = initiator.send()
   responder.recv(initiatorReply)
 
-  t.equal(initiator.complete, true)
-  t.equal(responder.complete, true)
+  t.alike(initiator.complete, true)
+  t.alike(responder.complete, true)
 
-  t.not(initiator.rx, null)
-  t.not(initiator.tx, null)
+  t.unlike(initiator.rx, null)
+  t.unlike(initiator.tx, null)
 
-  t.deepEqual(initiator.rx, responder.tx)
-  t.deepEqual(initiator.tx, responder.rx)
+  t.alike(initiator.rx, responder.tx)
+  t.alike(initiator.tx, responder.rx)
   t.end()
 })
 
@@ -71,8 +71,8 @@ test('NN', t => {
   const reply = responder.send()
   initiator.recv(reply)
 
-  t.deepEqual(initiator.rx, responder.tx)
-  t.deepEqual(initiator.tx, responder.rx)
+  t.alike(initiator.rx, responder.tx)
+  t.alike(initiator.tx, responder.rx)
   t.end()
 })
 
@@ -94,7 +94,7 @@ test('NNpsk0: bad', t => {
     responder.recv(message)
     t.fail('should have failed to verify!')
   } catch (err) {
-    t.equals(err.toString(), 'Error: could not verify data')
+    t.alike(err.toString(), 'Error: could not verify data')
   }
 })
 
@@ -113,8 +113,8 @@ test('NNpsk0: good', t => {
   const reply = responder.send()
   initiator.recv(reply)
 
-  t.deepEqual(initiator.rx, responder.tx)
-  t.deepEqual(initiator.tx, responder.rx)
+  t.alike(initiator.rx, responder.tx)
+  t.alike(initiator.tx, responder.rx)
   t.end()
 })
 
@@ -136,7 +136,7 @@ test('XXpsk0: bad', t => {
     responder.recv(message)
     t.fail('should have failed to verify!')
   } catch (err) {
-    t.equals(err.toString(), 'Error: could not verify data')
+    t.alike(err.toString(), 'Error: could not verify data')
   }
 })
 
@@ -155,7 +155,7 @@ test('XXpsk0: good', t => {
   const reply = responder.send()
   initiator.recv(reply)
 
-  t.deepEqual(initiator.rx, responder.tx)
-  t.deepEqual(initiator.tx, responder.rx)
+  t.alike(initiator.rx, responder.tx)
+  t.alike(initiator.tx, responder.rx)
   t.end()
 })
