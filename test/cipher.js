@@ -32,10 +32,10 @@ test('identity', function (assert) {
   const cipher = new Cipher(key)
   const ciphertext = cipher.encrypt(plaintext)
 
-  assert.exception(_ => cipher.decrypt(ciphertext, Buffer.alloc(1)))
+  assert.exception(() => cipher.decrypt(ciphertext, Buffer.alloc(1)))
   for (let i = 0; i < ciphertext.length; i++) {
     ciphertext[i] ^= i + 1
-    assert.exception(_ => cipher.decrypt(ciphertext))
+    assert.exception(() => cipher.decrypt(ciphertext))
     ciphertext[i] ^= i + 1
   }
 
@@ -62,16 +62,16 @@ test('identity with ad', function (assert) {
   const plaintext = Buffer.from('Hello world')
   const ciphertext = cipher.encrypt(plaintext, ad)
 
-  assert.exception(_ => cipher.decrypt(ciphertext, Buffer.alloc(1)), 'should not have ad')
-  assert.exception(_ => cipher2.decrypt(ciphertext, ad), 'wrong key')
+  assert.exception(() => cipher.decrypt(ciphertext, Buffer.alloc(1)), 'should not have ad')
+  assert.exception(() => cipher2.decrypt(ciphertext, ad), 'wrong key')
 
   cipher2.key = key
   cipher2.nonce = 2
-  assert.exception(_ => cipher2.decrypt(ciphertext, ad), 'wrong nonce')
+  assert.exception(() => cipher2.decrypt(ciphertext, ad), 'wrong nonce')
 
   for (let i = 0; i < ciphertext.length; i++) {
     ciphertext[i] ^= 255
-    assert.exception(_ => cipher.decrypt(ciphertext, ad))
+    assert.exception(() => cipher.decrypt(ciphertext, ad))
     ciphertext[i] ^= 255
   }
 
@@ -83,7 +83,7 @@ test('identity with ad', function (assert) {
 })
 
 test('max encrypt length', function (assert) {
-  assert.plan(2)
+  assert.plan(1)
 
   const key = Buffer.alloc(Cipher.KEYBYTES)
   randombytes_buf(key)
@@ -91,28 +91,21 @@ test('max encrypt length', function (assert) {
 
   const plaintext = Buffer.alloc(90_000).fill(0x08)
 
-  try {
-    cipher.encrypt(plaintext)
-  } catch (err) {
-    assert.ok(err instanceof Error)
-    assert.alike(err.message, 'ciphertext length of 90016 exceeds maximum Noise message length of 65535')
-  }
+  const exp = /ciphertext length of 90016 exceeds maximum Noise message length of 65535/
+  assert.exception(() => cipher.encrypt(plaintext), exp)
 })
 
 test('max decrypt length', function (assert) {
-  assert.plan(2)
+  assert.plan(1)
 
   const key = Buffer.alloc(Cipher.KEYBYTES)
   randombytes_buf(key)
   const cipher = new Cipher(key)
 
   const ciphertext = Buffer.alloc(100_000).fill(0xBABECAFE)
-  try {
-    cipher.decrypt(ciphertext)
-  } catch (err) {
-    assert.ok(err instanceof Error)
-    assert.alike(err.message, 'ciphertext length of 100000 exceeds maximum Noise message length of 65535')
-  }
+
+  const exp = /ciphertext length of 100000 exceeds maximum Noise message length of 65535/
+  assert.exception(() => cipher.decrypt(ciphertext), exp)
 })
 
 // test.skip('rekey', function (assert) {
