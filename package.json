@@ -20,7 +20,6 @@
   },
   "devDependencies": {
     "brittle": "^3.3.2",
-    "noise-curve-ed": "^2.0.1",
     "noise-protocol": "chm-diederichs/noise-protocol.git#xx-ephemeral-key",
     "standard": "^16.0.3"
   }
