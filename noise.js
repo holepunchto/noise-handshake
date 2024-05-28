@@ -152,8 +152,12 @@ module.exports = class NoiseState extends SymmetricState {
     const [k1, k2] = this.split()
 
     // These are often kept around for a while, so avoid keeping the original slab from being gc'd
-    this.tx = unslab(this.initiator ? k1 : k2)
-    this.rx = unslab(this.initiator ? k2 : k1)
+    const [tx, rx] = unslab.all([
+      this.initiator ? k1 : k2,
+      this.initiator ? k2 : k1
+    ])
+    this.tx = tx
+    this.rx = rx
 
     this.complete = true
     this.hash = this.getHandshakeHash()

@@ -62,12 +62,14 @@ test.solo('IK does not use shared-slab memory', t => {
   initiator.recv(reply)
 
   t.is(initiator.rs.buffer.byteLength, 32, 'remote public key does not use default slab')
-  t.is(initiator.rx.buffer.byteLength, 32, 'rx does not use default slab')
-  t.is(initiator.tx.buffer.byteLength, 32, 'tx does not use default slab')
+  t.is(initiator.rx.buffer.byteLength, 64, 'rx does not use default slab')
+  t.is(initiator.tx.buffer.byteLength, 64, 'tx does not use default slab')
+  t.is(initiator.rx.buffer, initiator.tx.buffer, 'rx and tx share same slab')
 
   t.is(responder.rs.buffer.byteLength, 32, 'remote public key does not use default slab')
-  t.is(responder.rx.buffer.byteLength, 32, 'rx does not use default slab')
-  t.is(responder.tx.buffer.byteLength, 32, 'tx does not use default slab')
+  t.is(responder.rx.buffer.byteLength, 64, 'rx does not use default slab')
+  t.is(responder.tx.buffer.byteLength, 64, 'tx does not use default slab')
+  t.is(responder.rx.buffer, responder.tx.buffer, 'rx and tx share same slab')
 
   t.end()
 })
