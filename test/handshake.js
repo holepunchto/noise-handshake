@@ -1,6 +1,8 @@
 const { test } = require('brittle')
 const NoiseState = require('../noise.js')
+const sodium = require('sodium-universal')
 // const curve = require('noise-curve-secp')
+const noiseCurveEd = require('noise-curve-ed')
 
 test('IK', t => {
   const initiator = new NoiseState('IK', true, null)
@@ -28,6 +30,45 @@ test('IK', t => {
 
   t.alike(initiator.rx, responder.tx)
   t.alike(initiator.tx, responder.rx)
+  t.end()
+})
+
+test('IK does not use shared-slab memory', t => {
+  const initiatorKeyPair = {
+    publicKey: Buffer.allocUnsafe(sodium.crypto_sign_PUBLICKEYBYTES),
+    secretKey: Buffer.allocUnsafe(sodium.crypto_sign_SECRETKEYBYTES)
+  }
+  const responderKeyPair = {
+    publicKey: Buffer.allocUnsafe(sodium.crypto_sign_PUBLICKEYBYTES),
+    secretKey: Buffer.allocUnsafe(sodium.crypto_sign_SECRETKEYBYTES)
+  }
+
+  sodium.crypto_sign_keypair(initiatorKeyPair.publicKey, initiatorKeyPair.secretKey)
+  sodium.crypto_sign_keypair(responderKeyPair.publicKey, responderKeyPair.secretKey)
+
+  t.is(initiatorKeyPair.publicKey.buffer.byteLength > 32, true, 'sanity check: uses shared slab')
+  t.is(responderKeyPair.publicKey.buffer.byteLength > 32, true, 'sanity check: uses shared slab')
+
+  const initiator = new NoiseState('IK', true, initiatorKeyPair, { curve: noiseCurveEd })
+  const responder = new NoiseState('IK', false, responderKeyPair, { curve: noiseCurveEd })
+
+  initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
+  responder.initialise(Buffer.alloc(0), initiator.s.publicKey)
+
+  const message = initiator.send()
+  responder.recv(message)
+
+  const reply = responder.send()
+  initiator.recv(reply)
+
+  t.is(initiator.rs.buffer.byteLength, 32, 'remote public key does not use default slab')
+  t.is(initiator.rx.buffer.byteLength, 32, 'rx does not use default slab')
+  t.is(initiator.tx.buffer.byteLength, 32, 'tx does not use default slab')
+
+  t.is(responder.rs.buffer.byteLength, 32, 'remote public key does not use default slab')
+  t.is(responder.rx.buffer.byteLength, 32, 'rx does not use default slab')
+  t.is(responder.tx.buffer.byteLength, 32, 'tx does not use default slab')
+
   t.end()
 })
 

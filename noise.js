@@ -1,5 +1,6 @@
 const assert = require('nanoassert')
 const b4a = require('b4a')
+const unslab = require('unslab')
 
 const SymmetricState = require('./symmetric-state')
 const { HASHLEN } = require('./hkdf')
@@ -137,7 +138,8 @@ module.exports = class NoiseState extends SymmetricState {
         ? message === PRESHARE_RS
         : message === PRESHARE_IS
 
-      if (takeRemoteKey) this.rs = remoteStatic
+      // This is often kept around for a while, so avoid keeping the original slab from being gc'd
+      if (takeRemoteKey) this.rs = unslab(remoteStatic)
 
       const key = takeRemoteKey ? this.rs : this.s.publicKey
       assert(key != null, 'Remote pubkey required')
@@ -149,8 +151,9 @@ module.exports = class NoiseState extends SymmetricState {
   final () {
     const [k1, k2] = this.split()
 
-    this.tx = this.initiator ? k1 : k2
-    this.rx = this.initiator ? k2 : k1
+    // These are often kept around for a while, so avoid keeping the original slab from being gc'd
+    this.tx = unslab(this.initiator ? k1 : k2)
+    this.rx = unslab(this.initiator ? k2 : k1)
 
     this.complete = true
     this.hash = this.getHandshakeHash()
