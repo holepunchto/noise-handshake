@@ -32,7 +32,7 @@ test('IK', t => {
   t.end()
 })
 
-test.solo('IK does not use shared-slab memory', t => {
+test('IK does not use shared-slab memory', t => {
   // Keys generated as with default curve, but using allocUnsafe mem
   const initiatorKeyPair = {
     publicKey: Buffer.allocUnsafe(sodium.crypto_scalarmult_BYTES),
