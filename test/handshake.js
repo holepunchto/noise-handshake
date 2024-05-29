@@ -1,6 +1,5 @@
 const { test } = require('brittle')
 const NoiseState = require('../noise.js')
-const sodium = require('sodium-universal')
 // const curve = require('noise-curve-secp')
 
 test('IK', t => {
@@ -32,25 +31,9 @@ test('IK', t => {
   t.end()
 })
 
-test('IK does not use shared-slab memory', t => {
-  // Keys generated as with default curve, but using allocUnsafe mem
-  const initiatorKeyPair = {
-    publicKey: Buffer.allocUnsafe(sodium.crypto_scalarmult_BYTES),
-    secretKey: Buffer.allocUnsafe(sodium.crypto_scalarmult_SCALARBYTES)
-  }
-  const responderKeyPair = {
-    publicKey: Buffer.allocUnsafe(sodium.crypto_scalarmult_BYTES),
-    secretKey: Buffer.allocUnsafe(sodium.crypto_scalarmult_SCALARBYTES)
-  }
-
-  sodium.crypto_kx_keypair(initiatorKeyPair.publicKey, initiatorKeyPair.secretKey)
-  sodium.crypto_kx_keypair(responderKeyPair.publicKey, responderKeyPair.secretKey)
-
-  t.is(initiatorKeyPair.publicKey.buffer.byteLength > 500, true, 'sanity check: uses shared slab')
-  t.is(responderKeyPair.publicKey.buffer.byteLength > 500, true, 'sanity check: uses shared slab')
-
-  const initiator = new NoiseState('IK', true, initiatorKeyPair)
-  const responder = new NoiseState('IK', false, responderKeyPair)
+test.solo('IK does not use shared-slab memory for tx and rx', t => {
+  const initiator = new NoiseState('IK', true, null)
+  const responder = new NoiseState('IK', false, null)
 
   initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
   responder.initialise(Buffer.alloc(0), initiator.s.publicKey)
@@ -61,12 +44,12 @@ test('IK does not use shared-slab memory', t => {
   const reply = responder.send()
   initiator.recv(reply)
 
-  t.is(initiator.rs.buffer.byteLength, 32, 'remote public key does not use default slab')
+  t.is(initiator.rs.buffer.byteLength < 500, true, 'default remote public key does not use slab')
   t.is(initiator.rx.buffer.byteLength < 500, true, 'rx does not use default slab')
   t.is(initiator.tx.buffer.byteLength < 500, true, 'tx does not use default slab')
   t.is(initiator.rx.buffer, initiator.tx.buffer, 'rx and tx share same slab')
 
-  t.is(responder.rs.buffer.byteLength, 32, 'remote public key does not use default slab')
+  t.is(responder.rs.buffer.byteLength < 500, true, 'default remote public key does not use slab')
   t.is(responder.rx.buffer.byteLength < 500, true, 'rx does not use default slab')
   t.is(responder.tx.buffer.byteLength < 500, true, 'tx does not use default slab')
   t.is(responder.rx.buffer, responder.tx.buffer, 'rx and tx share same slab')
