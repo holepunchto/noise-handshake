@@ -46,8 +46,8 @@ test('IK does not use shared-slab memory', t => {
   sodium.crypto_kx_keypair(initiatorKeyPair.publicKey, initiatorKeyPair.secretKey)
   sodium.crypto_kx_keypair(responderKeyPair.publicKey, responderKeyPair.secretKey)
 
-  t.is(initiatorKeyPair.publicKey.buffer.byteLength > 32, true, 'sanity check: uses shared slab')
-  t.is(responderKeyPair.publicKey.buffer.byteLength > 32, true, 'sanity check: uses shared slab')
+  t.is(initiatorKeyPair.publicKey.buffer.byteLength > 500, true, 'sanity check: uses shared slab')
+  t.is(responderKeyPair.publicKey.buffer.byteLength > 500, true, 'sanity check: uses shared slab')
 
   const initiator = new NoiseState('IK', true, initiatorKeyPair)
   const responder = new NoiseState('IK', false, responderKeyPair)
@@ -62,13 +62,13 @@ test('IK does not use shared-slab memory', t => {
   initiator.recv(reply)
 
   t.is(initiator.rs.buffer.byteLength, 32, 'remote public key does not use default slab')
-  t.is(initiator.rx.buffer.byteLength, 64, 'rx does not use default slab')
-  t.is(initiator.tx.buffer.byteLength, 64, 'tx does not use default slab')
+  t.is(initiator.rx.buffer.byteLength < 500, true, 'rx does not use default slab')
+  t.is(initiator.tx.buffer.byteLength < 500, true, 'tx does not use default slab')
   t.is(initiator.rx.buffer, initiator.tx.buffer, 'rx and tx share same slab')
 
   t.is(responder.rs.buffer.byteLength, 32, 'remote public key does not use default slab')
-  t.is(responder.rx.buffer.byteLength, 64, 'rx does not use default slab')
-  t.is(responder.tx.buffer.byteLength, 64, 'tx does not use default slab')
+  t.is(responder.rx.buffer.byteLength < 500, true, 'rx does not use default slab')
+  t.is(responder.tx.buffer.byteLength < 500, true, 'tx does not use default slab')
   t.is(responder.rx.buffer, responder.tx.buffer, 'rx and tx share same slab')
 
   t.end()

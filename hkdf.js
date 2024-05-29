@@ -39,7 +39,12 @@ function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
       T[i + 1] = hmacDigest(key, toHash)
     }
 
-    const result = b4a.concat(T.slice(1))
+    const resultWithSlab = b4a.concat(T.slice(1))
+
+    // Put in dedicated slab to avoid keeping shared slab from being gc'ed
+    const result = b4a.allocUnsafeSlow(resultWithSlab.byteLength)
+    b4a.copy(resultWithSlab, result)
+
     assert(result.byteLength === length, 'key expansion failed, length not as expected')
 
     return result
