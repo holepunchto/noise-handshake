@@ -31,17 +31,16 @@ function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
   function hkdfExpand (key, info, length) {
     let prevHash = b4a.from(info)
     const lengthRatio = length / HASHLEN
-    const hashByteLength = 64
 
     // Put in dedicated slab to avoid keeping shared slab from being gc'ed
-    const result = b4a.allocUnsafeSlow(lengthRatio * hashByteLength)
+    const result = b4a.allocUnsafeSlow(lengthRatio * HASHLEN)
 
     for (let i = 0; i < lengthRatio; i++) {
       const infoBuf = b4a.from(info)
       const toHash = b4a.concat([prevHash, infoBuf, b4a.from([i + 1])])
 
       prevHash = hmacDigest(key, toHash)
-      b4a.copy(prevHash, result, hashByteLength * i)
+      b4a.copy(prevHash, result, HASHLEN * i)
     }
 
     assert(result.byteLength === length, 'key expansion failed, length not as expected')
