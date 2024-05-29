@@ -25,21 +25,22 @@ function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
   return results
 
   function hkdfExtract (salt, inputKeyMaterial) {
-    return hmacDigest(salt, inputKeyMaterial)
+    const hmac = b4a.alloc(HASHLEN)
+    return hmacDigest(hmac, salt, inputKeyMaterial)
   }
 
   function hkdfExpand (key, info, length) {
-    let prevHash = b4a.from(info)
-    const infoBuf = b4a.from(info)
-
-    const lengthRatio = length / HASHLEN
-
     // Put in dedicated slab to avoid keeping shared slab from being gc'ed
-    const result = b4a.allocUnsafeSlow(lengthRatio * HASHLEN)
+    const result = b4a.allocUnsafeSlow(length)
 
-    for (let i = 0; i < lengthRatio; i++) {
-      prevHash = hmacDigest(key, [prevHash, infoBuf, b4a.from([i + 1])])
-      b4a.copy(prevHash, result, HASHLEN * i)
+    const infoBuf = b4a.from(info)
+    let prev = infoBuf
+
+    for (let i = 0; i < length; i += HASHLEN) {
+      const out = result.subarray(i, i + HASHLEN)
+      const pos = b4a.from([(i / HASHLEN) + 1])
+
+      prev = hmacDigest(out, key, [prev, infoBuf, pos])
     }
 
     assert(result.byteLength === length, 'key expansion failed, length not as expected')
@@ -48,9 +49,7 @@ function hkdf (salt, inputKeyMaterial, info = '', length = 2 * HASHLEN) {
   }
 }
 
-function hmacDigest (key, input) {
-  const hmac = b4a.alloc(HASHLEN)
-  hmacBlake2b(hmac, input, key)
-
-  return hmac
+function hmacDigest (out, key, input) {
+  hmacBlake2b(out, input, key)
+  return out
 }
