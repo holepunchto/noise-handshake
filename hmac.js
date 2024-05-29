@@ -30,7 +30,7 @@ module.exports = function hmac (out, data, key) {
 
   crypto_generichash_batch(out, [InnerKeyPad].concat(data))
   sodium_memzero(InnerKeyPad)
-  crypto_generichash_batch(out, [OuterKeyPad].concat(out))
+  crypto_generichash_batch(out, [OuterKeyPad, out])
   sodium_memzero(OuterKeyPad)
 }
 
