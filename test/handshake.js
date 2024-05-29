@@ -31,7 +31,7 @@ test('IK', t => {
   t.end()
 })
 
-test.solo('IK does not use shared-slab memory for tx and rx', t => {
+test('IK does not use shared-slab memory for tx and rx', t => {
   const initiator = new NoiseState('IK', true, null)
   const responder = new NoiseState('IK', false, null)
 
