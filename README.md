@@ -89,3 +89,7 @@ When complete, the working handshake state shall be cleared *only* the following
   hash, // a hash of the entire handshake state
 }
 ```
+
+## License
+
+Apache-2.0
