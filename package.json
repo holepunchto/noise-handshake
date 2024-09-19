@@ -6,8 +6,8 @@
   "scripts": {
     "test": "standard && brittle test/*.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Holepunch",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chm-diederichs/noise-handshake.git"
