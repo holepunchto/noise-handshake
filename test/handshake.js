@@ -31,6 +31,32 @@ test('IK', t => {
   t.end()
 })
 
+test('IK does not use shared-slab memory for tx and rx', t => {
+  const initiator = new NoiseState('IK', true, null)
+  const responder = new NoiseState('IK', false, null)
+
+  initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
+  responder.initialise(Buffer.alloc(0), initiator.s.publicKey)
+
+  const message = initiator.send()
+  responder.recv(message)
+
+  const reply = responder.send()
+  initiator.recv(reply)
+
+  t.is(initiator.rs.buffer.byteLength < 500, true, 'default remote public key does not use slab')
+  t.is(initiator.rx.buffer.byteLength < 500, true, 'rx does not use default slab')
+  t.is(initiator.tx.buffer.byteLength < 500, true, 'tx does not use default slab')
+  t.is(initiator.rx.buffer, initiator.tx.buffer, 'rx and tx share same slab')
+
+  t.is(responder.rs.buffer.byteLength < 500, true, 'default remote public key does not use slab')
+  t.is(responder.rx.buffer.byteLength < 500, true, 'rx does not use default slab')
+  t.is(responder.tx.buffer.byteLength < 500, true, 'tx does not use default slab')
+  t.is(responder.rx.buffer, responder.tx.buffer, 'rx and tx share same slab')
+
+  t.end()
+})
+
 test('XX', t => {
   const initiator = new NoiseState('XX', true, null)
   const responder = new NoiseState('XX', false, null)
