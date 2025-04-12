@@ -1,6 +1,6 @@
 {
   "name": "noise-handshake",
-  "version": "4.0.2",
+  "version": "4.1.0",
   "description": "Noise protocol handshake",
   "main": "noise.js",
   "files": [
