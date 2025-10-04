@@ -2,7 +2,7 @@ const { test } = require('brittle')
 const NoiseState = require('../noise.js')
 // const curve = require('noise-curve-secp')
 
-test('IK', t => {
+test('IK', (t) => {
   const initiator = new NoiseState('IK', true, null)
   const responder = new NoiseState('IK', false, null)
 
@@ -31,7 +31,7 @@ test('IK', t => {
   t.end()
 })
 
-test('IK does not use shared-slab memory for tx and rx', t => {
+test('IK does not use shared-slab memory for tx and rx', (t) => {
   const initiator = new NoiseState('IK', true, null)
   const responder = new NoiseState('IK', false, null)
 
@@ -44,20 +44,44 @@ test('IK does not use shared-slab memory for tx and rx', t => {
   const reply = responder.send()
   initiator.recv(reply)
 
-  t.is(initiator.rs.buffer.byteLength < 500, true, 'default remote public key does not use slab')
-  t.is(initiator.rx.buffer.byteLength < 500, true, 'rx does not use default slab')
-  t.is(initiator.tx.buffer.byteLength < 500, true, 'tx does not use default slab')
+  t.is(
+    initiator.rs.buffer.byteLength < 500,
+    true,
+    'default remote public key does not use slab'
+  )
+  t.is(
+    initiator.rx.buffer.byteLength < 500,
+    true,
+    'rx does not use default slab'
+  )
+  t.is(
+    initiator.tx.buffer.byteLength < 500,
+    true,
+    'tx does not use default slab'
+  )
   t.is(initiator.rx.buffer, initiator.tx.buffer, 'rx and tx share same slab')
 
-  t.is(responder.rs.buffer.byteLength < 500, true, 'default remote public key does not use slab')
-  t.is(responder.rx.buffer.byteLength < 500, true, 'rx does not use default slab')
-  t.is(responder.tx.buffer.byteLength < 500, true, 'tx does not use default slab')
+  t.is(
+    responder.rs.buffer.byteLength < 500,
+    true,
+    'default remote public key does not use slab'
+  )
+  t.is(
+    responder.rx.buffer.byteLength < 500,
+    true,
+    'rx does not use default slab'
+  )
+  t.is(
+    responder.tx.buffer.byteLength < 500,
+    true,
+    'tx does not use default slab'
+  )
   t.is(responder.rx.buffer, responder.tx.buffer, 'rx and tx share same slab')
 
   t.end()
 })
 
-test('XX', t => {
+test('XX', (t) => {
   const initiator = new NoiseState('XX', true, null)
   const responder = new NoiseState('XX', false, null)
 
@@ -84,7 +108,7 @@ test('XX', t => {
   t.end()
 })
 
-test('NN', t => {
+test('NN', (t) => {
   const initiator = new NoiseState('NN', true, null)
   const responder = new NoiseState('NN', false, null)
 
@@ -102,13 +126,17 @@ test('NN', t => {
   t.end()
 })
 
-test('NNpsk0: bad', t => {
+test('NNpsk0: bad', (t) => {
   t.plan(1)
 
   const psk1 = Buffer.from(
-    '324eee92611cd877841c4de9fd5253e9dba6033329a837ee5f01beb005dffb2f', 'hex')
+    '324eee92611cd877841c4de9fd5253e9dba6033329a837ee5f01beb005dffb2f',
+    'hex'
+  )
   const psk2 = Buffer.from(
-    'ebdb9f8cd9c704844ca47b88fe7526a3c9f865be998486ca16ae3431e019d0cc', 'hex')
+    'ebdb9f8cd9c704844ca47b88fe7526a3c9f865be998486ca16ae3431e019d0cc',
+    'hex'
+  )
   const initiator = new NoiseState('NNpsk0', true, null, { psk: psk1 })
   const responder = new NoiseState('NNpsk0', false, null, { psk: psk2 })
 
@@ -124,9 +152,11 @@ test('NNpsk0: bad', t => {
   }
 })
 
-test('NNpsk0: good', t => {
+test('NNpsk0: good', (t) => {
   const psk = Buffer.from(
-    '324eee92611cd877841c4de9fd5253e9dba6033329a837ee5f01beb005dffb2f', 'hex')
+    '324eee92611cd877841c4de9fd5253e9dba6033329a837ee5f01beb005dffb2f',
+    'hex'
+  )
   const initiator = new NoiseState('NNpsk0', true, null, { psk })
   const responder = new NoiseState('NNpsk0', false, null, { psk })
 
@@ -144,13 +174,17 @@ test('NNpsk0: good', t => {
   t.end()
 })
 
-test('XXpsk0: bad', t => {
+test('XXpsk0: bad', (t) => {
   t.plan(1)
 
   const psk1 = Buffer.from(
-    '324eee92611cd877841c4de9fd5253e9dba6033329a837ee5f01beb005dffb2f', 'hex')
+    '324eee92611cd877841c4de9fd5253e9dba6033329a837ee5f01beb005dffb2f',
+    'hex'
+  )
   const psk2 = Buffer.from(
-    'ebdb9f8cd9c704844ca47b88fe7526a3c9f865be998486ca16ae3431e019d0cc', 'hex')
+    'ebdb9f8cd9c704844ca47b88fe7526a3c9f865be998486ca16ae3431e019d0cc',
+    'hex'
+  )
   const initiator = new NoiseState('XXpsk0', true, null, { psk: psk1 })
   const responder = new NoiseState('XXpsk0', false, null, { psk: psk2 })
 
@@ -166,9 +200,11 @@ test('XXpsk0: bad', t => {
   }
 })
 
-test('XXpsk0: good', t => {
+test('XXpsk0: good', (t) => {
   const psk = Buffer.from(
-    '324eee92611cd877841c4de9fd5253e9dba6033329a837ee5f01beb005dffb2f', 'hex')
+    '324eee92611cd877841c4de9fd5253e9dba6033329a837ee5f01beb005dffb2f',
+    'hex'
+  )
   const initiator = new NoiseState('XXpsk0', true, null, { psk })
   const responder = new NoiseState('XXpsk0', false, null, { psk })
 
