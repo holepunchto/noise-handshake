@@ -31,13 +31,7 @@ test('XX handshake against reference impl', (t) => {
   handshakeHashes.push(initiator.getHandshakeHash())
   handshakeHashes.push(responder.getHandshakeHash())
 
-  const client = ref.initialize(
-    'XX',
-    true,
-    Buffer.alloc(0),
-    clone(initiator.s),
-    clone(initiator.e)
-  )
+  const client = ref.initialize('XX', true, Buffer.alloc(0), clone(initiator.s), clone(initiator.e))
   const server = ref.initialize(
     'XX',
     false,
@@ -63,22 +57,14 @@ test('XX handshake against reference impl', (t) => {
 
   // ->
   ref.writeMessage(client, Buffer.alloc(0), clientTx)
-  ref.readMessage(
-    server,
-    clientTx.subarray(0, ref.writeMessage.bytes),
-    serverRx
-  )
+  ref.readMessage(server, clientTx.subarray(0, ref.writeMessage.bytes), serverRx)
 
   storeHash(client, refHandshakeHashes)
   storeHash(server, refHandshakeHashes)
 
   // <-
   ref.writeMessage(server, Buffer.alloc(0), serverTx)
-  ref.readMessage(
-    client,
-    serverTx.subarray(0, ref.writeMessage.bytes),
-    clientRx
-  )
+  ref.readMessage(client, serverTx.subarray(0, ref.writeMessage.bytes), clientRx)
 
   storeHash(client, refHandshakeHashes)
   storeHash(server, refHandshakeHashes)
@@ -166,11 +152,7 @@ test('IK handshake against reference impl', (t) => {
 
   // ->
   ref.writeMessage(client, Buffer.alloc(0), clientTx)
-  ref.readMessage(
-    server,
-    clientTx.subarray(0, ref.writeMessage.bytes),
-    serverRx
-  )
+  ref.readMessage(server, clientTx.subarray(0, ref.writeMessage.bytes), serverRx)
   // <-
 
   storeHash(client, refHandshakeHashes)
@@ -248,14 +230,7 @@ test('IK handshake with reference client', (t) => {
   const responder = new Noise('IK', false)
   const keypair = generateKeyPair()
 
-  const client = ref.initialize(
-    'IK',
-    true,
-    Buffer.alloc(0),
-    keypair,
-    null,
-    responder.s.publicKey
-  )
+  const client = ref.initialize('IK', true, Buffer.alloc(0), keypair, null, responder.s.publicKey)
   const clientRx = Buffer.alloc(512)
   const clientTx = Buffer.alloc(512)
 

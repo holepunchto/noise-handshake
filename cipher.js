@@ -70,8 +70,7 @@ module.exports = class CipherState {
 
 function encryptWithAD(key, counter, additionalData, plaintext) {
   // for our purposes, additionalData will always be a pubkey so we encode from hex
-  if (!b4a.isBuffer(additionalData))
-    additionalData = b4a.from(additionalData, 'hex')
+  if (!b4a.isBuffer(additionalData)) additionalData = b4a.from(additionalData, 'hex')
   if (!b4a.isBuffer(plaintext)) plaintext = b4a.from(plaintext, 'hex')
 
   const nonce = b4a.alloc(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
@@ -95,8 +94,7 @@ function encryptWithAD(key, counter, additionalData, plaintext) {
 
 function decryptWithAD(key, counter, additionalData, ciphertext) {
   // for our purposes, additionalData will always be a pubkey so we encode from hex
-  if (!b4a.isBuffer(additionalData))
-    additionalData = b4a.from(additionalData, 'hex')
+  if (!b4a.isBuffer(additionalData)) additionalData = b4a.from(additionalData, 'hex')
   if (!b4a.isBuffer(ciphertext)) ciphertext = b4a.from(ciphertext, 'hex')
 
   const nonce = b4a.alloc(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)

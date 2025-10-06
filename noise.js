@@ -115,14 +115,9 @@ module.exports = class NoiseState extends SymmetricState {
 
       // handshake steps should be as arrays, only
       // preshare tokens are provided otherwise
-      assert(
-        message === PRESHARE_RS || message === PRESHARE_IS,
-        'Unexpected pattern'
-      )
+      assert(message === PRESHARE_RS || message === PRESHARE_IS, 'Unexpected pattern')
 
-      const takeRemoteKey = this.initiator
-        ? message === PRESHARE_RS
-        : message === PRESHARE_IS
+      const takeRemoteKey = this.initiator ? message === PRESHARE_RS : message === PRESHARE_IS
 
       if (takeRemoteKey) this.rs = remoteStatic
 

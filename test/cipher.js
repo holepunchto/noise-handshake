@@ -13,18 +13,9 @@ test('constants', function (assert) {
   assert.ok(Cipher.NONCEBYTES === 8, 'NONCEBYTES conforms to Noise Protocol')
   assert.ok(Cipher.MACBYTES === 16, 'MACBYTES conforms to Noise Protocol')
 
-  assert.ok(
-    Cipher.KEYBYTES === crypto_aead_chacha20poly1305_ietf_KEYBYTES,
-    'KEYBYTES'
-  )
-  assert.ok(
-    Cipher.NONCEBYTES + 4 === crypto_aead_chacha20poly1305_ietf_NPUBBYTES,
-    'NONCEBYTES'
-  )
-  assert.ok(
-    Cipher.MACBYTES === crypto_aead_chacha20poly1305_ietf_ABYTES,
-    'MACBYTES'
-  )
+  assert.ok(Cipher.KEYBYTES === crypto_aead_chacha20poly1305_ietf_KEYBYTES, 'KEYBYTES')
+  assert.ok(Cipher.NONCEBYTES + 4 === crypto_aead_chacha20poly1305_ietf_NPUBBYTES, 'NONCEBYTES')
+  assert.ok(Cipher.MACBYTES === crypto_aead_chacha20poly1305_ietf_ABYTES, 'MACBYTES')
 
   assert.end()
 })
@@ -71,10 +62,7 @@ test('identity with ad', function (assert) {
   const plaintext = Buffer.from('Hello world')
   const ciphertext = cipher.encrypt(plaintext, ad)
 
-  assert.exception(
-    () => cipher.decrypt(ciphertext, Buffer.alloc(1)),
-    'should not have ad'
-  )
+  assert.exception(() => cipher.decrypt(ciphertext, Buffer.alloc(1)), 'should not have ad')
   assert.exception(() => cipher2.decrypt(ciphertext, ad), 'wrong key')
 
   cipher2.key = key
@@ -103,8 +91,7 @@ test('max encrypt length', function (assert) {
 
   const plaintext = Buffer.alloc(90_000).fill(0x08)
 
-  const exp =
-    /ciphertext length of 90016 exceeds maximum Noise message length of 65535/
+  const exp = /ciphertext length of 90016 exceeds maximum Noise message length of 65535/
   assert.exception(() => cipher.encrypt(plaintext), exp)
 })
 
@@ -117,8 +104,7 @@ test('max decrypt length', function (assert) {
 
   const ciphertext = Buffer.alloc(100_000).fill(0xbabecafe)
 
-  const exp =
-    /ciphertext length of 100000 exceeds maximum Noise message length of 65535/
+  const exp = /ciphertext length of 100000 exceeds maximum Noise message length of 65535/
   assert.exception(() => cipher.decrypt(ciphertext), exp)
 })
 
