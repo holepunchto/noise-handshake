@@ -40,6 +40,12 @@ const HANDSHAKES = Object.freeze({
     PRESHARE_RS,
     [TOK_E, TOK_ES, TOK_S, TOK_SS],
     [TOK_E, TOK_EE, TOK_SE]
+  ],
+  XK: [
+    PRESHARE_RS,
+    [TOK_E, TOK_ES],
+    [TOK_E, TOK_EE],
+    [TOK_S, TOK_SE]
   ]
 })
 

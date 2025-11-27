@@ -185,3 +185,72 @@ test('XXpsk0: good', t => {
   t.alike(initiator.tx, responder.rx)
   t.end()
 })
+
+test('XK', t => {
+  const initiator = new NoiseState('XK', true, null)
+  const responder = new NoiseState('XK', false, null)
+
+  initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
+  responder.initialise(Buffer.alloc(0))
+
+  const message = initiator.send()
+  responder.recv(message)
+
+  const reply = responder.send()
+  initiator.recv(reply)
+
+  const initiatorReply = initiator.send()
+  responder.recv(initiatorReply)
+
+  t.alike(initiator.complete, true)
+  t.alike(responder.complete, true)
+
+  t.unlike(initiator.rx, null)
+  t.unlike(initiator.tx, null)
+
+  t.alike(initiator.rs, responder.s.publicKey)
+  t.alike(responder.rs, initiator.s.publicKey)
+  t.alike(initiator.rx, responder.tx)
+  t.alike(initiator.tx, responder.rx)
+  t.end()
+})
+
+test('XK: bad preshared key', t => {
+  t.plan(1)
+
+  const initiator = new NoiseState('XK', true, null)
+  const responder = new NoiseState('XK', false, null)
+  const wrongResponder = new NoiseState('XK', false, null)
+
+  // Initiator has wrong responder's static key
+  initiator.initialise(Buffer.alloc(0), wrongResponder.s.publicKey)
+  responder.initialise(Buffer.alloc(0))
+
+  const message = initiator.send()
+  t.exception(() => responder.recv(message), 'could not verify data')
+})
+
+test('XK: missing preshared key', t => {
+  t.plan(1)
+
+  const initiator = new NoiseState('XK', true, null)
+  // Initiator must provide responder's static key for XK
+  t.exception(() => initiator.initialise(Buffer.alloc(0)), 'Remote pubkey required')
+})
+
+test('XK: tampered message', t => {
+  t.plan(1)
+
+  const initiator = new NoiseState('XK', true, null)
+  const responder = new NoiseState('XK', false, null)
+
+  initiator.initialise(Buffer.alloc(0), responder.s.publicKey)
+  responder.initialise(Buffer.alloc(0))
+
+  const message = initiator.send()
+
+  // Flip a bit in the message
+  message[message.length - 1] ^= 1
+
+  t.exception(() => responder.recv(message), 'could not verify data')
+})
