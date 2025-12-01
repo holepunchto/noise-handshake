@@ -122,7 +122,7 @@ module.exports = class NoiseState extends SymmetricState {
       if (takeRemoteKey) this.rs = remoteStatic
 
       const key = takeRemoteKey ? this.rs : this.s.publicKey
-      assert(key != null, 'Remote pubkey required')
+      assert(key !== null, 'Remote pubkey required')
 
       this.mixHash(key)
     }
