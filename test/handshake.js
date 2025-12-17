@@ -192,7 +192,7 @@ test('XXpsk0: good', (t) => {
   t.end()
 })
 
-test('XK', t => {
+test('XK', (t) => {
   const initiator = new NoiseState('XK', true, null)
   const responder = new NoiseState('XK', false, null)
 
@@ -221,7 +221,7 @@ test('XK', t => {
   t.end()
 })
 
-test('XK: bad preshared key', t => {
+test('XK: bad preshared key', (t) => {
   t.plan(1)
 
   const initiator = new NoiseState('XK', true, null)
@@ -236,7 +236,7 @@ test('XK: bad preshared key', t => {
   t.exception(() => responder.recv(message), 'could not verify data')
 })
 
-test('XK: missing preshared key', t => {
+test('XK: missing preshared key', (t) => {
   t.plan(1)
 
   const initiator = new NoiseState('XK', true, null)
@@ -244,7 +244,7 @@ test('XK: missing preshared key', t => {
   t.exception(() => initiator.initialise(Buffer.alloc(0)), 'Remote pubkey required')
 })
 
-test('XK: tampered message', t => {
+test('XK: tampered message', (t) => {
   t.plan(1)
 
   const initiator = new NoiseState('XK', true, null)

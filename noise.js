@@ -29,7 +29,8 @@ const HANDSHAKES = Object.freeze({
     [TOK_E, TOK_EE, TOK_S, TOK_ES],
     [TOK_S, TOK_SE]
   ],
-  IK: [PRESHARE_RS, [TOK_E, TOK_ES, TOK_S, TOK_SS], [TOK_E, TOK_EE, TOK_SE]]
+  IK: [PRESHARE_RS, [TOK_E, TOK_ES, TOK_S, TOK_SS], [TOK_E, TOK_EE, TOK_SE]],
+  XK: [PRESHARE_RS, [TOK_E, TOK_ES], [TOK_E, TOK_EE], [TOK_S, TOK_SE]]
 })
 
 class Writer {
@@ -122,7 +123,7 @@ module.exports = class NoiseState extends SymmetricState {
       if (takeRemoteKey) this.rs = remoteStatic
 
       const key = takeRemoteKey ? this.rs : this.s.publicKey
-      assert(key !== null, 'Remote pubkey required')
+      assert(key != null, 'Remote pubkey required') // lunte-disable-line eqeqeq
 
       this.mixHash(key)
     }
