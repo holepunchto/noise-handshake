@@ -7,7 +7,11 @@
     "*.js"
   ],
   "scripts": {
-    "test": "standard && brittle test/*.js"
+    "format": "prettier --write .",
+    "lint": "prettier --check . && lunte",
+    "test": "npm run test:node",
+    "test:node": "brittle-node test/*.js",
+    "test:bare": "brittle-bare test/*.js"
   },
   "author": "Holepunch",
   "license": "Apache-2.0",
@@ -22,7 +26,9 @@
   },
   "devDependencies": {
     "brittle": "^3.3.2",
+    "lunte": "^1.0.0",
     "noise-protocol": "chm-diederichs/noise-protocol.git#xx-ephemeral-key",
-    "standard": "^16.0.3"
+    "prettier": "^3.6.2",
+    "prettier-config-holepunch": "^2.0.0"
   }
 }
