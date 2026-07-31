@@ -31,12 +31,12 @@ console.log(initiator.complete) // true
 
 // instantiate a cipher using shared secrets
 const send = new Cipher(initiator.tx)
-const recieve = new Cipher(responder.rx)
+const receive = new Cipher(responder.rx)
 
 const msg = Buffer.from('hello, world')
 
 const enc = send.encrypt(msg)
-console.log(recieve.decrypt(enc)) // hello, world
+console.log(receive.decrypt(enc)) // hello, world
 ```
 
 ## API
