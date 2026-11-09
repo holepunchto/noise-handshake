@@ -132,3 +132,16 @@ test('max decrypt length', function (assert) {
 //   assert.ok(Buffer.equals(decrypted, plaintext))
 //   assert.end()
 // })
+
+test('ciphertext shorter than the mac', function (assert) {
+  const key = Buffer.alloc(Cipher.KEYBYTES)
+  randombytes_buf(key)
+
+  const cipher = new Cipher(key)
+  for (let i = 0; i < Cipher.MACBYTES; i++) {
+    assert.exception(() => cipher.decrypt(Buffer.alloc(i)), /shorter than the MAC/)
+    assert.exception(() => cipher.decrypt(Buffer.alloc(i).toString('hex')), /shorter than the MAC/)
+  }
+
+  assert.end()
+})
