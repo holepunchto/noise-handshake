@@ -7,7 +7,7 @@ const getHandshakeHash = () => {}
 const Noise = require('../noise')
 const { generateKeyPair } = require('../dh')
 
-test.skip('XX handshake against reference impl', t => {
+test.skip('XX handshake against reference impl', (t) => {
   const initiator = new Noise('XX', true)
   const responder = new Noise('XX', false)
 
@@ -34,7 +34,13 @@ test.skip('XX handshake against reference impl', t => {
   handshakeHashes.push(responder.getHandshakeHash())
 
   const client = ref.initialize('XX', true, Buffer.alloc(0), clone(initiator.s), clone(initiator.e))
-  const server = ref.initialize('XX', false, Buffer.alloc(0), clone(responder.s), clone(responder.e))
+  const server = ref.initialize(
+    'XX',
+    false,
+    Buffer.alloc(0),
+    clone(responder.s),
+    clone(responder.e)
+  )
 
   message = initiator.send()
   responder.recv(message)
@@ -67,7 +73,11 @@ test.skip('XX handshake against reference impl', t => {
 
   // ->
   const splitClient = ref.writeMessage(client, Buffer.alloc(0), clientTx)
-  const splitServer = ref.readMessage(server, clientTx.subarray(0, ref.writeMessage.bytes), serverRx)
+  const splitServer = ref.readMessage(
+    server,
+    clientTx.subarray(0, ref.writeMessage.bytes),
+    serverRx
+  )
 
   storeHash(client, refHandshakeHashes)
   storeHash(server, refHandshakeHashes)
@@ -83,13 +93,13 @@ test.skip('XX handshake against reference impl', t => {
 
   t.end()
 
-  function storeHash (state, arr) {
+  function storeHash(state, arr) {
     getHandshakeHash(state.symmetricState, hash)
     arr.push(Buffer.from(hash))
   }
 })
 
-test.skip('IK handshake against reference impl', t => {
+test.skip('IK handshake against reference impl', (t) => {
   const initiator = new Noise('IK', true)
   const responder = new Noise('IK', false)
 
@@ -111,8 +121,21 @@ test.skip('IK handshake against reference impl', t => {
 
   responder.e = generateKeyPair()
 
-  const server = ref.initialize('IK', false, Buffer.alloc(0), clone(responder.s), clone(responder.e))
-  const client = ref.initialize('IK', true, Buffer.alloc(0), clone(initiator.s), clone(initiator.e), clone(responder.s).publicKey)
+  const server = ref.initialize(
+    'IK',
+    false,
+    Buffer.alloc(0),
+    clone(responder.s),
+    clone(responder.e)
+  )
+  const client = ref.initialize(
+    'IK',
+    true,
+    Buffer.alloc(0),
+    clone(initiator.s),
+    clone(initiator.e),
+    clone(responder.s).publicKey
+  )
 
   const reply = responder.send()
   initiator.recv(reply)
@@ -139,7 +162,11 @@ test.skip('IK handshake against reference impl', t => {
 
   // ->
   const splitClient = ref.writeMessage(server, Buffer.alloc(0), serverTx)
-  const splitServer = ref.readMessage(client, serverTx.subarray(0, ref.writeMessage.bytes), clientRx)
+  const splitServer = ref.readMessage(
+    client,
+    serverTx.subarray(0, ref.writeMessage.bytes),
+    clientRx
+  )
 
   storeHash(client, refHandshakeHashes)
   storeHash(server, refHandshakeHashes)
@@ -155,13 +182,13 @@ test.skip('IK handshake against reference impl', t => {
 
   t.end()
 
-  function storeHash (state, arr) {
+  function storeHash(state, arr) {
     getHandshakeHash(state.symmetricState, hash)
     arr.push(Buffer.from(hash))
   }
 })
 
-test.skip('IK handshake with reference server', t => {
+test.skip('IK handshake with reference server', (t) => {
   const initiator = new Noise('IK', true)
   const keypair = generateKeyPair()
 
@@ -194,14 +221,14 @@ test.skip('IK handshake with reference server', t => {
 
   t.end()
 
-  function getHash (state) {
+  function getHash(state) {
     const ret = Buffer.alloc(64)
     getHandshakeHash(state.symmetricState, ret)
     return ret
   }
 })
 
-test.skip('IK handshake with reference client', t => {
+test.skip('IK handshake with reference client', (t) => {
   const responder = new Noise('IK', false)
   const keypair = generateKeyPair()
 
@@ -234,14 +261,14 @@ test.skip('IK handshake with reference client', t => {
 
   t.end()
 
-  function getHash (state) {
+  function getHash(state) {
     const ret = Buffer.alloc(64)
     getHandshakeHash(state.symmetricState, ret)
     return ret
   }
 })
 
-test.skip('XX handshake with reference server', t => {
+test.skip('XX handshake with reference server', (t) => {
   const initiator = new Noise('XX', true)
   const keypair = generateKeyPair()
 
@@ -280,14 +307,14 @@ test.skip('XX handshake with reference server', t => {
 
   t.end()
 
-  function getHash (state) {
+  function getHash(state) {
     const ret = Buffer.alloc(64)
     getHandshakeHash(state.symmetricState, ret)
     return ret
   }
 })
 
-test.skip('XX handshake with reference client', t => {
+test.skip('XX handshake with reference client', (t) => {
   const responder = new Noise('XX', false)
   const keypair = generateKeyPair()
 
@@ -328,14 +355,14 @@ test.skip('XX handshake with reference client', t => {
 
   t.end()
 
-  function getHash (state) {
+  function getHash(state) {
     const ret = Buffer.alloc(64)
     getHandshakeHash(state.symmetricState, ret)
     return ret
   }
 })
 
-test.skip('Bugfix: prologue >64 bytes', t => {
+test.skip('Bugfix: prologue >64 bytes', (t) => {
   const responder = new Noise('XX', false)
   const keypair = generateKeyPair()
 
@@ -378,20 +405,20 @@ test.skip('Bugfix: prologue >64 bytes', t => {
 
   t.end()
 
-  function getHash (state) {
+  function getHash(state) {
     const ret = Buffer.alloc(64)
     getHandshakeHash(state.symmetricState, ret)
     return ret
   }
 })
 
-function randomBytes (n) {
+function randomBytes(n) {
   const bytes = Buffer.alloc(Math.ceil(Math.random() * n))
   sodium.randombytes_buf(bytes)
   return bytes
 }
 
-function clone (key = {}) {
+function clone(key = {}) {
   if (!key) return {}
   return {
     secretKey: key.secretKey ? Buffer.from(key.secretKey) : null,

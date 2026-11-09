@@ -1,7 +1,7 @@
 const Noise = require('../noise')
 const { test } = require('brittle')
 
-test('IK with payload', t => {
+test('IK with payload', (t) => {
   const initiator = new Noise('IK', true)
   const responder = new Noise('IK', false)
 
@@ -22,7 +22,7 @@ test('IK with payload', t => {
   t.end()
 })
 
-test('XX with payload', t => {
+test('XX with payload', (t) => {
   const initiator = new Noise('XX', true)
   const responder = new Noise('XX', false)
 

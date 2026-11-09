@@ -1,6 +1,7 @@
 # noise-handshake
 
 ## Usage
+
 ```js
 const Noise = require('noise-handshake')
 const Cipher = require('noise-handshake/cipher')
@@ -46,10 +47,12 @@ console.log(recieve.decrypt(enc)) // hello, world
 Create a new handshake state for a given pattern. Initiator should be either `true` or `false` depending on the role. A preexisting keypair may be passed as `staticKeypair`
 
 `opts` may be used to pass in the following:
+
 - `curve`: module for performing Noise over other curves.
 - `psk`: a 32-byte buffer containing a pre-shared key for patterns containing `psk0`. (Other psk positions are not currently supported.)
 
 Curve modules should export the following:
+
 ```
 {
   DHLEN,
@@ -79,7 +82,7 @@ Receive a handshake message from the peer and return the encrypted payload.
 
 `true` or `false`. Indicates whether `rx` and `tx` have been created yet.
 
-When complete, the working handshake state shall be cleared *only* the following state shall remain on the object:
+When complete, the working handshake state shall be cleared _only_ the following state shall remain on the object:
 
 ```js
 {

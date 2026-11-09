@@ -102,7 +102,7 @@ test('max decrypt length', function (assert) {
   randombytes_buf(key)
   const cipher = new Cipher(key)
 
-  const ciphertext = Buffer.alloc(100_000).fill(0xBABECAFE)
+  const ciphertext = Buffer.alloc(100_000).fill(0xbabecafe)
 
   const exp = /ciphertext length of 100000 exceeds maximum Noise message length of 65535/
   assert.exception(() => cipher.decrypt(ciphertext), exp)

@@ -12,7 +12,7 @@ const InnerKeyPad = scratch.subarray(BLOCKLEN * 2, BLOCKLEN * 3)
 // Post-fill is done in the cases where someone caught an exception that
 // happened before we were able to clear data at the end
 
-module.exports = function hmac (out, batch, key) {
+module.exports = function hmac(out, batch, key) {
   if (key.byteLength > BLOCKLEN) {
     crypto_generichash(HMACKey.subarray(0, HASHLEN), key)
     sodium_memzero(HMACKey.subarray(HASHLEN))

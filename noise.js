@@ -18,49 +18,33 @@ const TOK_EE = Symbol('ee')
 const TOK_SS = Symbol('ss')
 
 const HANDSHAKES = Object.freeze({
-  NN: [
-    [TOK_E],
-    [TOK_E, TOK_EE]
-  ],
+  NN: [[TOK_E], [TOK_E, TOK_EE]],
   NNpsk0: [
     [TOK_PSK, TOK_E],
     [TOK_E, TOK_EE]
   ],
-  XX: [
-    [TOK_E],
-    [TOK_E, TOK_EE, TOK_S, TOK_ES],
-    [TOK_S, TOK_SE]
-  ],
+  XX: [[TOK_E], [TOK_E, TOK_EE, TOK_S, TOK_ES], [TOK_S, TOK_SE]],
   XXpsk0: [
     [TOK_PSK, TOK_E],
     [TOK_E, TOK_EE, TOK_S, TOK_ES],
     [TOK_S, TOK_SE]
   ],
-  IK: [
-    PRESHARE_RS,
-    [TOK_E, TOK_ES, TOK_S, TOK_SS],
-    [TOK_E, TOK_EE, TOK_SE]
-  ],
-  XK: [
-    PRESHARE_RS,
-    [TOK_E, TOK_ES],
-    [TOK_E, TOK_EE],
-    [TOK_S, TOK_SE]
-  ]
+  IK: [PRESHARE_RS, [TOK_E, TOK_ES, TOK_S, TOK_SS], [TOK_E, TOK_EE, TOK_SE]],
+  XK: [PRESHARE_RS, [TOK_E, TOK_ES], [TOK_E, TOK_EE], [TOK_S, TOK_SE]]
 })
 
 class Writer {
-  constructor () {
+  constructor() {
     this.size = 0
     this.buffers = []
   }
 
-  push (b) {
+  push(b) {
     this.size += b.byteLength
     this.buffers.push(b)
   }
 
-  end () {
+  end() {
     const all = b4a.alloc(this.size)
     let offset = 0
     for (const b of this.buffers) {
@@ -72,25 +56,25 @@ class Writer {
 }
 
 class Reader {
-  constructor (buf) {
+  constructor(buf) {
     this.offset = 0
     this.buffer = buf
   }
 
-  shift (n) {
+  shift(n) {
     const start = this.offset
-    const end = this.offset += n
+    const end = (this.offset += n)
     if (end > this.buffer.byteLength) throw new Error('Insufficient bytes')
     return this.buffer.subarray(start, end)
   }
 
-  end () {
+  end() {
     return this.shift(this.buffer.byteLength - this.offset)
   }
 }
 
 module.exports = class NoiseState extends SymmetricState {
-  constructor (pattern, initiator, staticKeypair, opts = {}) {
+  constructor(pattern, initiator, staticKeypair, opts = {}) {
     super(opts)
 
     this.s = staticKeypair || this.curve.generateKeyPair()
@@ -107,13 +91,9 @@ module.exports = class NoiseState extends SymmetricState {
 
     this.isPskHandshake = !!this.psk && hasPskToken(this.handshake)
 
-    this.protocol = b4a.from([
-      'Noise',
-      this.pattern,
-      this.DH_ALG,
-      this.CIPHER_ALG,
-      'BLAKE2b'
-    ].join('_'))
+    this.protocol = b4a.from(
+      ['Noise', this.pattern, this.DH_ALG, this.CIPHER_ALG, 'BLAKE2b'].join('_')
+    )
 
     this.initiator = initiator
     this.complete = false
@@ -123,7 +103,7 @@ module.exports = class NoiseState extends SymmetricState {
     this.hash = null
   }
 
-  initialise (prologue, remoteStatic) {
+  initialise(prologue, remoteStatic) {
     if (this.protocol.byteLength <= HASHLEN) this.digest.set(this.protocol)
     else this.mixHash(this.protocol)
 
@@ -136,23 +116,20 @@ module.exports = class NoiseState extends SymmetricState {
 
       // handshake steps should be as arrays, only
       // preshare tokens are provided otherwise
-      assert(message === PRESHARE_RS || message === PRESHARE_IS,
-        'Unexpected pattern')
+      assert(message === PRESHARE_RS || message === PRESHARE_IS, 'Unexpected pattern')
 
-      const takeRemoteKey = this.initiator
-        ? message === PRESHARE_RS
-        : message === PRESHARE_IS
+      const takeRemoteKey = this.initiator ? message === PRESHARE_RS : message === PRESHARE_IS
 
       if (takeRemoteKey) this.rs = remoteStatic
 
       const key = takeRemoteKey ? this.rs : this.s.publicKey
-      assert(key != null, 'Remote pubkey required')
+      assert(key != null, 'Remote pubkey required') // lunte-disable-line eqeqeq
 
       this.mixHash(key)
     }
   }
 
-  final () {
+  final() {
     const [k1, k2] = this.split()
 
     this.tx = this.initiator ? k1 : k2
@@ -164,31 +141,31 @@ module.exports = class NoiseState extends SymmetricState {
     this._clear()
   }
 
-  recv (buf) {
+  recv(buf) {
     const r = new Reader(buf)
 
     for (const pattern of this.handshake.shift()) {
       switch (pattern) {
-        case TOK_PSK :
+        case TOK_PSK:
           this.mixKeyAndHash(this.psk)
           break
 
-        case TOK_E :
+        case TOK_E:
           this.re = r.shift(this.curve.PKLEN)
           this.mixHash(this.re)
           if (this.isPskHandshake) this.mixKeyNormal(this.re)
           break
 
-        case TOK_S : {
+        case TOK_S: {
           const klen = this.hasKey ? this.curve.PKLEN + 16 : this.curve.PKLEN
           this.rs = this.decryptAndHash(r.shift(klen))
           break
         }
 
-        case TOK_EE :
-        case TOK_ES :
-        case TOK_SE :
-        case TOK_SS : {
+        case TOK_EE:
+        case TOK_ES:
+        case TOK_SE:
+        case TOK_SS: {
           const useStatic = keyPattern(pattern, this.initiator)
 
           const localKey = useStatic.local ? this.s : this.e
@@ -198,7 +175,7 @@ module.exports = class NoiseState extends SymmetricState {
           break
         }
 
-        default :
+        default:
           throw new Error('Unexpected message')
       }
     }
@@ -209,30 +186,30 @@ module.exports = class NoiseState extends SymmetricState {
     return payload
   }
 
-  send (payload = b4a.alloc(0)) {
+  send(payload = b4a.alloc(0)) {
     const w = new Writer()
 
     for (const pattern of this.handshake.shift()) {
       switch (pattern) {
-        case TOK_PSK :
+        case TOK_PSK:
           this.mixKeyAndHash(this.psk)
           break
 
-        case TOK_E :
+        case TOK_E:
           if (this.e === null) this.e = this.curve.generateKeyPair()
           this.mixHash(this.e.publicKey)
           if (this.isPskHandshake) this.mixKeyNormal(this.e.publicKey)
           w.push(this.e.publicKey)
           break
 
-        case TOK_S :
+        case TOK_S:
           w.push(this.encryptAndHash(this.s.publicKey))
           break
 
-        case TOK_ES :
-        case TOK_SE :
-        case TOK_EE :
-        case TOK_SS : {
+        case TOK_ES:
+        case TOK_SE:
+        case TOK_EE:
+        case TOK_SS: {
           const useStatic = keyPattern(pattern, this.initiator)
 
           const localKey = useStatic.local ? this.s : this.e
@@ -242,7 +219,7 @@ module.exports = class NoiseState extends SymmetricState {
           break
         }
 
-        default :
+        default:
           throw new Error('Unexpected message')
       }
     }
@@ -254,7 +231,7 @@ module.exports = class NoiseState extends SymmetricState {
     return response
   }
 
-  _clear () {
+  _clear() {
     super._clear()
 
     this.e.secretKey.fill(0)
@@ -267,7 +244,7 @@ module.exports = class NoiseState extends SymmetricState {
   }
 }
 
-function keyPattern (pattern, initiator) {
+function keyPattern(pattern, initiator) {
   const ret = {
     local: false,
     remote: false
@@ -294,8 +271,8 @@ function keyPattern (pattern, initiator) {
   }
 }
 
-function hasPskToken (handshake) {
-  return handshake.some(x => {
+function hasPskToken(handshake) {
+  return handshake.some((x) => {
     return Array.isArray(x) && x.indexOf(TOK_PSK) !== -1
   })
 }

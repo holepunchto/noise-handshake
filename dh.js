@@ -29,7 +29,7 @@ module.exports = {
   dh
 }
 
-function generateKeyPair (privKey) {
+function generateKeyPair(privKey) {
   const keyPair = {}
 
   keyPair.secretKey = privKey || b4a.alloc(SKLEN)
@@ -44,7 +44,7 @@ function generateKeyPair (privKey) {
   return keyPair
 }
 
-function generateSeedKeyPair (seed) {
+function generateSeedKeyPair(seed) {
   assert(seed.byteLength === SKLEN)
 
   const keyPair = {}
@@ -55,17 +55,13 @@ function generateSeedKeyPair (seed) {
   return keyPair
 }
 
-function dh (publicKey, { secretKey }) {
+function dh(publicKey, { secretKey }) {
   assert(secretKey.byteLength === SKLEN)
   assert(publicKey.byteLength === PKLEN)
 
   const output = b4a.alloc(DHLEN)
 
-  crypto_scalarmult(
-    output,
-    secretKey,
-    publicKey
-  )
+  crypto_scalarmult(output, secretKey, publicKey)
 
   return output
 }
