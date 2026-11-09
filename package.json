@@ -22,7 +22,6 @@
   },
   "devDependencies": {
     "brittle": "^3.3.2",
-    "noise-protocol": "chm-diederichs/noise-protocol.git#xx-ephemeral-key",
     "standard": "^16.0.3"
   }
 }
