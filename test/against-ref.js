@@ -7,7 +7,7 @@ const getHandshakeHash = () => {}
 const Noise = require('../noise')
 const { generateKeyPair } = require('../dh')
 
-test.skip('XX handshake against reference impl', t => {
+test.skip('XX handshake against reference impl', (t) => {
   const initiator = new Noise('XX', true)
   const responder = new Noise('XX', false)
 
@@ -99,7 +99,7 @@ test.skip('XX handshake against reference impl', t => {
   }
 })
 
-test.skip('IK handshake against reference impl', t => {
+test.skip('IK handshake against reference impl', (t) => {
   const initiator = new Noise('IK', true)
   const responder = new Noise('IK', false)
 
@@ -188,7 +188,7 @@ test.skip('IK handshake against reference impl', t => {
   }
 })
 
-test.skip('IK handshake with reference server', t => {
+test.skip('IK handshake with reference server', (t) => {
   const initiator = new Noise('IK', true)
   const keypair = generateKeyPair()
 
@@ -228,7 +228,7 @@ test.skip('IK handshake with reference server', t => {
   }
 })
 
-test.skip('IK handshake with reference client', t => {
+test.skip('IK handshake with reference client', (t) => {
   const responder = new Noise('IK', false)
   const keypair = generateKeyPair()
 
@@ -268,7 +268,7 @@ test.skip('IK handshake with reference client', t => {
   }
 })
 
-test.skip('XX handshake with reference server', t => {
+test.skip('XX handshake with reference server', (t) => {
   const initiator = new Noise('XX', true)
   const keypair = generateKeyPair()
 
@@ -314,7 +314,7 @@ test.skip('XX handshake with reference server', t => {
   }
 })
 
-test.skip('XX handshake with reference client', t => {
+test.skip('XX handshake with reference client', (t) => {
   const responder = new Noise('XX', false)
   const keypair = generateKeyPair()
 
@@ -362,7 +362,7 @@ test.skip('XX handshake with reference client', t => {
   }
 })
 
-test.skip('Bugfix: prologue >64 bytes', t => {
+test.skip('Bugfix: prologue >64 bytes', (t) => {
   const responder = new Noise('XX', false)
   const keypair = generateKeyPair()
 

@@ -98,7 +98,9 @@ function decryptWithAD(key, counter, additionalData, ciphertext) {
   // for our purposes, additionalData will always be a pubkey so we encode from hex
   if (!b4a.isBuffer(additionalData)) additionalData = b4a.from(additionalData, 'hex')
   if (!b4a.isBuffer(ciphertext)) ciphertext = b4a.from(ciphertext, 'hex')
-  if (ciphertext.byteLength < sodium.crypto_aead_chacha20poly1305_ietf_ABYTES) throw new Error(`ciphertext length of ${ciphertext.byteLength} is shorter than the MAC`)
+  if (ciphertext.byteLength < sodium.crypto_aead_chacha20poly1305_ietf_ABYTES) {
+    throw new Error(`ciphertext length of ${ciphertext.byteLength} is shorter than the MAC`)
+  }
 
   const nonce = b4a.alloc(sodium.crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
   const view = new DataView(nonce.buffer, nonce.byteOffset, nonce.byteLength)
