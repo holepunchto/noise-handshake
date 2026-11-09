@@ -9,7 +9,7 @@
   "scripts": {
     "format": "prettier --write .",
     "lint": "prettier --check . && lunte",
-    "test": "npm run test:node",
+    "test": "npm run test:node && npm run test:bare",
     "test:node": "brittle-node test/*.js",
     "test:bare": "brittle-bare test/*.js"
   },
