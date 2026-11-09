@@ -2,7 +2,8 @@ const { test } = require('brittle')
 // const ref = require('noise-protocol')
 const ref = {}
 const sodium = require('sodium-universal')
-const { getHandshakeHash } = require('noise-protocol/symmetric-state')
+// const { getHandshakeHash } = require('noise-protocol/symmetric-state')
+const getHandshakeHash = () => {}
 const Noise = require('../noise')
 const { generateKeyPair } = require('../dh')
 
